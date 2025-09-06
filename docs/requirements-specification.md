@@ -361,23 +361,3 @@ So that 技術的な知識なしに可視化できる
 | 仕様変更 | 高 | バージョニング戦略 |
 | 互換性問題 | 中 | 網羅的な統合テスト |
 | CSV/JSON以外の形式要求 | 低 | 将来バージョンで検討 |
-
-## 10. Appendix
-
-### 10.1 Related Documents
-
-- MCP仕様: `/docs/mcp-integration.md`
-- Function Callingスキーマ: `/docs/function-schema.json`
-- APIリファレンス: `/docs/api-reference.md`
-- 設計書: `/docs/design.md`
-- ADR: `/docs/adr/`
-- テスト計画書: `/docs/test-plan.md`
-- コンセプト1pager: `/docs/foundation/concept.md`
-- 可視化ポリシー: `/docs/foundation/visualization-policy.md`
-
-### 10.2 Change History
-
-| 日付 | バージョン | 変更内容 | 作成者 |
-| --- | --- | --- | --- |
-| 2025-01-21 | 0.1 | 初期バージョン | - |
-| 2025-01-22 | 0.2 | Design Docレビューを反映：用語統一、3×3マトリクス定義追加、言語対応修正、サンプリング方針明記、フォールバック戦略具体化 | - |
