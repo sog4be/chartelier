@@ -16,7 +16,7 @@ AIエージェントが複雑なデータ分析タスクにおいて、可視化
 
 ### 1.3 Scope
 
-### In Scope
+#### In Scope
 
 - MCP（Model Context Protocol）準拠API
 - CSV/JSON形式データの処理と可視化
@@ -25,7 +25,7 @@ AIエージェントが複雑なデータ分析タスクにおいて、可視化
 - 標準化されたエラー形式
 - 3×3マトリクス（9パターン）による可視化制約
 
-### Out of Scope
+#### Out of Scope
 
 - CSV/JSON以外のデータ形式（Excel、Parquet等）
 - セッション管理・コンテキスト保持
@@ -50,7 +50,7 @@ AIエージェントが複雑なデータ分析タスクにおいて、可視化
 
 ### 2.1 Primary Integration Patterns
 
-### Pattern A: MCP Tool Server
+#### Pattern A: MCP Tool Server
 
 - **役割**: MCP準拠のツールサーバーとして動作
 - **接続**: Claude Desktop、VSCode等のMCPクライアント
@@ -58,14 +58,14 @@ AIエージェントが複雑なデータ分析タスクにおいて、可視化
 - **出力**: PNG（Base64エンコード）またはSVG（文字列）
 - **特徴**: 完全ステートレス、単発処理
 
-### Pattern B: Function Calling API
+#### Pattern B: Function Calling API
 
 - **役割**: OpenAI/Anthropic Function Calling対応
 - **利用**: ChatGPT、Claude API経由での呼び出し
 - **形式**: 標準的なFunction Callingスキーマ定義
 - **応答**: 同期的な画像生成
 
-### Pattern C: REST API
+#### Pattern C: REST API
 
 - **役割**: 汎用的なRESTエンドポイント
 - **利用**: 任意のHTTPクライアント
@@ -74,7 +74,7 @@ AIエージェントが複雑なデータ分析タスクにおいて、可視化
 
 ### 2.2 User Stories
 
-### US-001: MCPツール経由の可視化
+#### US-001: MCPツール経由の可視化
 
 ```
 As a MCPクライアント（Claude Desktop等）
@@ -89,7 +89,7 @@ So that データ分析の効率を向上できる
 
 ```
 
-### US-002: エラーハンドリング
+#### US-002: エラーハンドリング
 
 ```
 As a AIエージェント/MCPクライアント
@@ -105,7 +105,7 @@ So that 適切な対処や代替案を選択できる
 
 ```
 
-### US-003: 自然言語理解
+#### US-003: 自然言語理解
 
 ```
 As a エンドユーザー（エージェントを介して）
@@ -124,7 +124,7 @@ So that 技術的な知識なしに可視化できる
 
 ### 3.1 Integration Features
 
-### FR-010: MCP Tool Server
+#### FR-010: MCP Tool Server
 
 - **説明**: Model Context Protocol準拠のツールサーバー
 - **ツール名**: chartelier_visualize
@@ -132,14 +132,14 @@ So that 技術的な知識なしに可視化できる
 - **必須項目**: data, query
 - **レスポンス**: 画像データ（PNG Base64/SVG文字列）
 
-### FR-011: Function Calling API
+#### FR-011: Function Calling API
 
 - **説明**: OpenAI/Anthropic仕様準拠のAPI
 - **スキーマ**: JSON Schema形式
 - **認証**: APIキー/Bearer Token
 - **エラー**: 構造化エラー応答
 
-### FR-012: REST API
+#### FR-012: REST API
 
 - **説明**: 汎用的なHTTPエンドポイント
 - **仕様**: OpenAPI 3.0
@@ -150,7 +150,7 @@ So that 技術的な知識なしに可視化できる
 
 ### 3.2 Data Processing Features
 
-### FR-020: CSV/JSON Input Processing
+#### FR-020: CSV/JSON Input Processing
 
 - **形式**: CSV/JSON（JSONはテーブルに変換できる形式であること）
 - **エンコーディング**: UTF-8
@@ -160,14 +160,14 @@ So that 技術的な知識なしに可視化できる
 - **ヘッダー**: 必須（1行目）
 - **区切り文字**: カンマ、タブ、パイプ対応
 
-### FR-021: Natural Language Query Processing
+#### FR-021: Natural Language Query Processing
 
 - **入力**: 可視化意図を表す自然言語テキスト
 - **言語**: 日本語/英語対応
 - **文字数**: 最大1000文字
 - **出力**: コンテキストに応じた最適なグラフタイプの自動選択と生成
 
-### FR-022: Visualization Pattern Constraint
+#### FR-022: Visualization Pattern Constraint
 
 - **パターン数**: 3×3マトリクスによる9パターン
 - **第1意図**: 推移（Transition）、差異（Difference）、概要（Overview）
@@ -177,14 +177,14 @@ So that 技術的な知識なしに可視化できる
 
 ### 3.3 Output Features
 
-### FR-030: Image Generation
+#### FR-030: Image Generation
 
 - **形式**: PNG（Base64エンコード）、SVG（文字列）
 - **解像度**: 72–300 DPI選択可能
 - **サイズ**: デフォルト800×600、最大2000×2000
 - **品質**: 本番環境対応品質
 
-### FR-031: Error Response
+#### FR-031: Error Response
 
 - **形式**: 構造化JSON
 - **内容**: エラーコード、メッセージ、修正提案
@@ -240,13 +240,13 @@ So that 技術的な知識なしに可視化できる
 
 ### 5.1 Protocol Compliance
 
-### MCP-010: Tool Definition
+#### MCP-010: Tool Definition
 
 - MCP仕様に準拠したツール定義
 - 明確な入力/出力スキーマ
 - エラーハンドリング仕様
 
-### MCP-011: Stateless Processing
+#### MCP-011: Stateless Processing
 
 - 完全ステートレス実装
 - 各リクエストの独立性保証
@@ -254,13 +254,13 @@ So that 技術的な知識なしに可視化できる
 
 ### 5.2 Compatibility
 
-### MCP-020: Client Support
+#### MCP-020: Client Support
 
 - Claude Desktop対応
 - VSCode MCP拡張対応
 - カスタムMCPクライアント対応
 
-### MCP-021: Error Specification
+#### MCP-021: Error Specification
 
 - MCP標準エラー形式
 - 適切なエラーコード
@@ -330,14 +330,14 @@ So that 技術的な知識なしに可視化できる
 
 ## 8. Priority and Phases
 
-### Phase 1: Core Tool（6週間）
+#### Phase 1: Core Tool（6週間）
 
 - P0: MCPツールサーバー実装
 - P0: 9パターン制約エンジン
 - P0: 基本的なエラーハンドリング
 - P0: P13（推移×概要）フォールバック実装
 
-### Phase 2: Enhanced Integration（3ヶ月）
+#### Phase 2: Enhanced Integration（3ヶ月）
 
 - P1: Function Calling API
 - P1: REST API実装

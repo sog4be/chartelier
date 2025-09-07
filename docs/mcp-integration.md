@@ -160,7 +160,7 @@
 - **Protocol version advertise:** `"2025-06-18"`
 - **API/テンプレ/パターンのバージョン**は `metadata.versions` に含める（サーバ側では保持しない）。
 
-### 付録：最小のE2E手順
+## 付録：最小のE2E手順
 
 1. `initialize` 応答（上記）
 2. `tools/list` に上記ツール定義を返す
