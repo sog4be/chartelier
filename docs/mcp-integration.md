@@ -4,6 +4,20 @@
 **Protocol:** MCP（JSON‑RPC 2.0 / stdio）<br>
 **Scope:** Tools のみ（Resources/Promptsは対象外）<br>
 
+## 目次
+
+- [1. Transport / Lifecycle](#1-transport--lifecycle)
+- [2. initialize 応答（固定値）](#2-initialize-応答固定値)
+- [3. tools/list で公開するツール](#3-toolslist-で公開するツール)
+- [4. tools/call 仕様（結果の最小形）](#4-toolscall-仕様結果の最小形)
+  - [4.1 成功](#41-成功)
+  - [4.2 業務エラー（可視化は失敗）](#42-業務エラー可視化は失敗)
+  - [4.3 プロトコルエラー（JSON-RPC）](#43-プロトコルエラーjson-rpc)
+- [5. タイムアウト / キャンセル / サイズ](#5-タイムアウト--キャンセル--サイズ)
+- [6. ロギング / データ保持](#6-ロギング--データ保持)
+- [7. 互換性・バージョン](#7-互換性バージョン)
+- [付録：最小のE2E手順](#付録最小のe2e手順)
+
 ## 1. Transport / Lifecycle
 
 - **Transport:** `stdio`（初期）。

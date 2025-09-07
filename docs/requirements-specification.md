@@ -4,6 +4,42 @@
 
 *Version: 0.2 | Last Updated: 2025-09-06*
 
+## 目次
+
+- [1. Overview](#1-overview)
+  - [1.1 Product Positioning](#11-product-positioning)
+  - [1.2 Purpose](#12-purpose)
+  - [1.3 Scope](#13-scope)
+  - [1.4 Terminology](#14-terminology)
+- [2. Integration Scenarios](#2-integration-scenarios)
+  - [2.1 Primary Integration Patterns](#21-primary-integration-patterns)
+  - [2.2 User Stories](#22-user-stories)
+- [3. Functional Requirements](#3-functional-requirements)
+  - [3.1 Integration Features](#31-integration-features)
+  - [3.2 Data Processing Features](#32-data-processing-features)
+  - [3.3 Output Features](#33-output-features)
+- [4. Non-Functional Requirements](#4-non-functional-requirements)
+  - [4.1 Performance](#41-performance)
+  - [4.2 Availability and Reliability](#42-availability-and-reliability)
+  - [4.3 Scalability](#43-scalability)
+  - [4.4 Compatibility](#44-compatibility)
+  - [4.5 Monitoring and Operations](#45-monitoring-and-operations)
+- [5. MCP Integration Requirements](#5-mcp-integration-requirements)
+  - [5.1 Protocol Compliance](#51-protocol-compliance)
+  - [5.2 Compatibility](#52-compatibility)
+- [6. Visualization Pattern Specification](#6-visualization-pattern-specification)
+  - [6.1 3×3 Matrix Definition](#61-3×3-matrix-definition)
+  - [6.2 Pattern Catalog](#62-pattern-catalog)
+- [7. Constraints](#7-constraints)
+  - [7.1 Architecture Constraints](#71-architecture-constraints)
+  - [7.2 Integration Constraints](#72-integration-constraints)
+  - [7.3 Security Constraints](#73-security-constraints)
+  - [7.4 Data Processing Constraints](#74-data-processing-constraints)
+- [8. Priority and Phases](#8-priority-and-phases)
+- [9. Risks and Dependencies](#9-risks-and-dependencies)
+  - [9.1 Technical Risks](#91-technical-risks)
+  - [9.2 Integration Risks](#92-integration-risks)
+
 ## 1. Overview
 
 ### 1.1 Product Positioning
