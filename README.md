@@ -96,7 +96,7 @@ chartelier/
 ### CI/CD
 
 GitHub Actions runs on:
-- Push to main/develop branches
+- Push to main branch
 - Pull requests
 - Python 3.11, 3.12, 3.13 on Ubuntu
 
@@ -104,3 +104,33 @@ Tests include:
 - Unit tests with coverage
 - Ruff linting
 - MyPy type checking
+
+### Branching Strategy
+
+- Model: Trunk-Based Development with short-lived branches
+- Permanent branch: `main` (always releasable)
+- Working branches: `feat/<slug>`, `fix/<slug>`, `chore/<slug>`, `refactor/<slug>`, `docs/<slug>`
+- Merge policy: PRs with squash merge; rebase only locally; no force-push to `main`
+- Release cadence: up to weekly; cut releases by tagging `main` with SemVer tags like `vX.Y.Z` (no long-lived release branches)
+- Hotfix flow: `hotfix/<slug>` from `main` → PR to `main` → tag a patch release
+- Commit convention: Conventional Commits (enables automatic changelogs and release notes)
+- Branch protection (recommended): require status checks and at least one review on `main`; restrict direct pushes when external contributors join
+
+### Pull Request Templates
+
+- Location: templates live under `.github/PULL_REQUEST_TEMPLATE/`. When opening a PR on GitHub, click “Choose a template” and pick the closest fit.
+- Common choices:
+  - `feature.md`: new features or enhancements (default if unsure)
+  - `fix.md`: bug fixes
+  - `docs.md`: documentation-only changes
+  - `perf.md`: performance improvements
+  - `ci.md`: CI/CD workflows or config
+  - `ops.md`: operations/infrastructure/configuration changes
+  - `security.md`: security-related fixes (omit sensitive details)
+  - `release.md`: release housekeeping (version bump, notes)
+  - `spec_api.md`: API surface/contract changes
+- How to use:
+  - Fill out Summary, Changes, Verification (how you tested), Compatibility (breaking changes/migrations), and Links as applicable.
+  - Keep the checklist; remove sections that don’t apply.
+  - Use a Conventional Commit–style PR title; this becomes the squash commit on merge.
+  - Add appropriate labels (e.g., feature, bug, docs, perf, ci, ops, security, release, api) for triage.
