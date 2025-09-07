@@ -1,0 +1,235 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chartelier"
+version = "0.1.0"
+description = "MCP-compliant visualization tool for AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "sog4be", email = "163720533+sog4be@users.noreply.github.com"},
+]
+keywords = ["mcp", "visualization", "charts", "ai-agents", "altair"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "altair>=5.0.0",
+    "polars>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8.4",
+    "mypy>=1.13.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-timeout>=2.3.1",
+    "tox>=4.23.2",
+    "pre-commit>=4.0.1",
+    "types-requests>=2.32.0.20241016",
+]
+mcp = [
+    "mcp>=1.0.0",
+]
+litellm = [
+    "litellm>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/chartelier"
+Documentation = "https://github.com/yourusername/chartelier/blob/main/docs/"
+Repository = "https://github.com/yourusername/chartelier.git"
+Issues = "https://github.com/yourusername/chartelier/issues"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/docs",
+    "LICENSE",
+    "README.md",
+    "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chartelier"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+src = ["src", "tests"]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203",    # 1 blank line required before class docstring (conflicts with D211)
+    "D213",    # Multi-line docstring summary should start at the second line (conflicts with D212)
+    "COM812",  # Missing trailing comma (conflicts with formatter)
+    "ISC001",  # Single line implicit string concatenation (conflicts with formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",    # Use of assert detected
+    "PLR2004", # Magic value used in comparison
+    "D",       # Docstring rules
+    "ANN",     # Type annotations (tests don't always need them)
+    "ARG",     # Unused arguments (fixtures)
+]
+"docs/**/*.py" = ["ALL"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+no_implicit_reexport = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "src"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "altair.*",
+    "mcp.*",
+    "litellm.*",
+    "polars.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=chartelier",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--tb=short",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["src/chartelier"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.tox]
+min_version = "4.0"
+env_list = ["py{311,312,313}", "lint", "type", "coverage"]
+
+[tool.tox.env_run_base]
+package = "editable"
+deps = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-timeout>=2.3.1",
+]
+commands = [
+    ["pytest", "{posargs}"]
+]
+
+[tool.tox.env.lint]
+skip_install = true
+deps = [
+    "ruff>=0.8.4",
+]
+commands = [
+    ["ruff", "check", "src", "tests"],
+    ["ruff", "format", "--check", "src", "tests"],
+]
+
+[tool.tox.env.type]
+skip_install = false
+deps = [
+    "mypy>=1.13.0",
+    "types-requests>=2.32.0.20241016",
+    "pydantic>=2.0.0",
+]
+commands = [
+    ["mypy", "src"],
+]
+
+[tool.tox.env.coverage]
+deps = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-timeout>=2.3.1",
+]
+commands = [
+    ["pytest", "--cov", "--cov-report=term-missing", "--cov-report=html"],
+]
+
+[tool.tox.env.format]
+skip_install = true
+deps = [
+    "ruff>=0.8.4",
+]
+commands = [
+    ["ruff", "check", "--fix", "src", "tests"],
+    ["ruff", "format", "src", "tests"],
+]
