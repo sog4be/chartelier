@@ -16,11 +16,11 @@
   - ステートレス運用・同時実行 100 の達成
 
 ## Decision
-**ランタイムの DataFrame エンジンは Polars のみ**とする。  
-- 取り込み・前処理・縮退・マッピングを **Polars の式DSL**で実装  
-- Altair へは **Polars のまま**（必要に応じ records 化）で受け渡し  
-- 縮退は `with_row_index` + 等間隔フィルタで**決定論的サンプリング**  
-- 並列度は環境変数（例：`POLARS_MAX_THREADS`）で制御、**multiprocessing は spawn 起動**を採用  
+**ランタイムの DataFrame エンジンは Polars のみ**とする。
+- 取り込み・前処理・縮退・マッピングを **Polars の式DSL**で実装
+- Altair へは **Polars のまま**（必要に応じ records 化）で受け渡し
+- 縮退は `with_row_index` + 等間隔フィルタで**決定論的サンプリング**
+- 並列度は環境変数（例：`POLARS_MAX_THREADS`）で制御、**multiprocessing は spawn 起動**を採用
 - pandas への依存は**一切追加しない**（dev/optional も設けない）
 
 ## Options Considered
@@ -42,7 +42,7 @@
 
 ## Risks & Mitigations
 - **Altair 側の仕様変動** → Polars 直渡しが難しい場合は **records 渡し**に切替（型を明示）
-- **MP/fork 非相性** → サーバは **spawn** 起動を徹底、ヘルスチェック＋フォールバック（P13）で可用性担保
+- **MP/fork 非相性** → サーバは **spawn** 起動を徹底、ヘルスチェックで可用性担保
 - **JSON 形状のばらつき** → 入力仕様を**行指向/配列のオブジェクトに限定**し、Validator で厳格に検査
 - **並列過多によるスレッド競合** → `POLARS_MAX_THREADS` を K8s リソースと連動させ運用基準化
 

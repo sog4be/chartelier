@@ -31,20 +31,20 @@
   "protocolVersion": "2025-06-18",
   "serverInfo": { "name": "chartelier", "version": "0.2.0", "title": "Chartelier MCP Server" },
   "capabilities": { "tools": { "listChanged": false } },
-  "instructions": "Use `chartelier_visualize` to convert CSV/JSON + intent (ja/en) into a static chart. Required: data, query. Defaults: format=png, dpi=300, size=1200x900. Timeout 60s. On failure, fallback to P13."
+  "instructions": "Use `chartelier_visualize` to convert CSV/JSON + intent (ja/en) into a static chart. Required: data, query. Defaults: format=png, dpi=300, size=1200x900. Timeout 60s. Pattern selection failure returns error."
 }
 
 ```
 
 > instructions は暫定文。必要に応じて後で更新。
-> 
+>
 
 ## 3. `tools/list` で公開するツール
 
 ```json
 {
   "name": "chartelier_visualize",
-  "description": "CSV/JSON + intent (ja/en) -> static chart (PNG/SVG). Uses 9 predefined patterns; fallback to P13 on failure.",
+  "description": "CSV/JSON + intent (ja/en) -> static chart (PNG/SVG). Uses 9 predefined patterns; pattern selection failure returns error.",
   "inputSchema": {
     "type": "object",
     "required": ["data", "query"],
@@ -126,7 +126,7 @@
 ### 4.2 業務エラー（可視化は失敗）
 
 - **返し方:** **プロトコルエラーではなく** `result.isError=true`。
-- **画像:** エラープレースホルダー（SVG推奨）＋`metadata.fallback_applied=true`。
+- **エラー内容:** エラーコード、メッセージ、意図明確化のヒント。
 
 ```json
 {
@@ -134,14 +134,14 @@
   "id": 3,
   "result": {
     "content": [
-      { "type": "image", "data": "<BASE64-OF-ERROR-SVG>", "mimeType": "image/svg+xml" }
+      { "type": "text", "text": "Pattern selection failed: Unable to determine visualization intent. Please describe more clearly what you want to compare, track, or overview." }
     ],
     "structuredContent": {
-      "metadata": {
-        "pattern_id": "P13",
-        "template_id": "facet_histogram",
-        "warnings": ["auto-fallback to P13 due to mapping failure"],
-        "fallback_applied": true
+      "error": {
+        "code": "E422_UNPROCESSABLE",
+        "message": "Pattern selection failed",
+        "hint": "Try specifying: 1) What aspect to visualize (trends, differences, distribution), 2) Time period if relevant, 3) Categories to compare",
+        "correlation_id": "req-12345"
       }
     },
     "isError": true

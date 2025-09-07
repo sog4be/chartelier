@@ -253,7 +253,7 @@ AIエージェントが生成するグラフは品質が不安定。LLMは視覚
 | P02 | 差異 | - | カテゴリ間の比較 | 棒グラフ |
 | P03 | 概要 | - | 分布や構成の把握 | ヒストグラム |
 | P12 | 推移 | 差異 | 複数系列の時間変化比較 | 複数折れ線 |
-| P13 | 推移 | 概要 | 分布の時間的変化（標準フォールバック） | ファセット×ヒストグラム |
+| P13 | 推移 | 概要 | 分布の時間的変化 | ファセット×ヒストグラム |
 | P21 | 差異 | 推移 | 差分の時間的変化 | グループ化棒グラフ |
 | P23 | 差異 | 概要 | カテゴリ別の分布比較 | オーバーレイヒストグラム |
 | P31 | 概要 | 推移 | 全体像の時間的変化 | Small multiples |
@@ -354,57 +354,57 @@ graph TB
 #### Interface Layer
 
 - **MCPHandler**
-    
+
     MCP準拠のリクエスト受信とレスポンス送信を担当。RequestValidatorを用いた形式検証の実行、検証済みリクエストのCoordinatorへの転送、MCPエラー仕様に準拠したエラーレスポンスの生成、PNG（Base64エンコード）/SVG（文字列）形式での画像レスポンスのフォーマットを実施。
-    
+
 - **RequestValidator**
-    
+
     外部からのリクエストの形式的検証に特化した純粋関数的コンポーネント。必須フィールド（data, query）の存在確認、データ形式（CSV/JSON）の判定、サイズ制限（100MB）の確認、UTF-8エンコーディングの検証、クエリ文字数制限（1000文字）のチェックを実施。他コンポーネントへの依存なし。
-    
+
 
 #### Orchestration Layer
 
 - **Coordinator**
-    
+
     可視化処理全体のワークフロー制御。CSV/JSON文字列のパース、各処理ステップの順次実行管理、エラー時のフォールバック戦略の決定、タイムアウト管理（60秒）、最終レスポンスの組み立てを担当。
-    
+
 
 #### Processing Layer
 
 - **DataValidator**
-    
+
     入力データの構造的・意味的妥当性を検証。CSV/JSONの解析とデータフレーム変換、データ型の推論とメタデータ抽出（列数、行数、型情報）、欠損値・異常値の検出、可視化可能性の判定と制約チェックを実行。
-    
+
 - **PatternSelector**
-    
-    自然言語クエリとデータ特性から最適な可視化パターンを決定。3×3マトリクス（推移/差異/概要 × なし/推移/差異/概要）への分類、LLMを活用した意図解釈、フォールバック時の「P13（推移×概要）」パターンへの自動選択を実施。
-    
+
+    自然言語クエリとデータ特性から最適な可視化パターンを決定。3×3マトリクス（推移/差異/概要 × なし/推移/差異/概要）への分類、LLMを活用した意図解釈を実施。推論失敗時は、エラーとして扱う。
+
 - **ChartSelector**
-    
+
     パターンとデータ特性から最適なグラフ種類と補助要素を選択。利用可能なグラフタイプの候補抽出、LLMを活用した最適なチャートタイプの決定、補助要素（トレンドライン、注釈等）の選択、フォールバック時の標準グラフ（折れ線）への自動選択を担当。
-    
+
 - **DataProcessor**
-    
+
     選択されたグラフ要件に応じたデータの前処理実行。集計・フィルタリング・ソート・ピボット等の変換操作、時系列データの期間調整、外れ値処理、LLMによる必要な前処理操作の決定、登録済み関数のみを使用した安全な処理実行を担当。
-    
+
 - **DataMapper**
-    
+
     処理済みデータとグラフテンプレートのエンコーディング要件のマッピング。データ列とテンプレート変数（x軸、y軸、色等）の対応付け、データ型とエンコーディング型の整合性確認、LLMを活用した最適なマッピング決定、必須フィールドの充足確認を実施。
-    
+
 
 #### Core Layer
 
 - **ChartBuilder**
-    
+
     Altairベースのグラフテンプレート管理とレンダリング。各グラフ種別のビルダーメソッドの実装、パターンIDに対応する利用可能グラフリストの提供、テンプレート仕様と要件の定義、Altairチャートオブジェクトの構築、各種フォーマット（SVG/PNG/Vega-Lite）でのエクスポートを担当。
-    
+
 
 #### Infrastructure Layer
 
 - **LLMClient**
-    
+
     外部LLM APIとの通信実装。OpenAI/Anthropic API仕様準拠の通信、認証とAPIキー管理、レート制限とリトライ制御、ネットワークエラーハンドリング、レスポンスストリーミング処理、共通メトリクス収集を担当。
-    
+
 
 ### 5.3 シーケンス図
 
@@ -449,7 +449,6 @@ sequenceDiagram
     Coordinator->>PatternSelector: select(metadata, query)
     PatternSelector->>LLMClient: classify_pattern(prompt)
     LLMClient-->>PatternSelector: LLM response
-    Note over PatternSelector: Parse response or fallback to "P13（推移×概要）"
     PatternSelector-->>Coordinator: pattern_id
 
     %% 6. Chart Type Selection
@@ -660,8 +659,8 @@ PIPELINE_CONFIG = {
     },
     PipelinePhase.PATTERN_SELECTION: {
         'timeout': 10,
-        'required': False,
-        'fallback': 'P13'  # 推移×概要（標準フォールバック）
+        'required': True,  # パターン選択は必須（失敗時はエラー）
+        'fallback': None
     },
     PipelinePhase.CHART_SELECTION: {
         'timeout': 10,
@@ -739,6 +738,7 @@ DATA_CONSTRAINTS = {
 - プロンプトで9パターンの定義を明示し選択肢を制限
 - Few-shotサンプルで分類精度を向上
 - LLM応答の構造化JSONで確実なパース
+- 意図が不明確な場合は明示的にエラーを返す（誤った可視化を防ぐ）
 
 **クラス構造**:
 
@@ -746,15 +746,15 @@ DATA_CONSTRAINTS = {
 PatternSelector
 ├── select() → PatternSelection
 ├── _build_prompt() → str  # メタデータとクエリから構造化プロンプト生成
-├── _parse_response() → PatternSelection  # JSON応答パース
-└── _fallback() → PatternSelection  # "P13: 推移×概要" への確定的フォールバック
+└── _parse_response() → PatternSelection  # JSON応答パース
 
 ```
 
 **エラー処理方針**:
 
-- LLMタイムアウト時は即座にP13パターン（最汎用）を選択
-- 無効なパターンID応答時もP13へフォールバック
+- LLMタイムアウト時は`PatternSelectionError`を送出
+- 無効なパターンID応答時も明示的なエラーを返す
+- エラーメッセージには意図を明確にするためのヒントを含める
 - パターンIDは2桁表記（P01〜P32）で統一
 
 #### ChartSelector
@@ -772,6 +772,7 @@ PatternSelector
 - ChartBuilderから候補リストを取得し選択肢を制限
 - グラフタイプと補助要素を独立して選択（結合度低減）
 - テンプレートごとの補助要素制約を事前定義
+- パターン選択とは異なり、チャート選択は決定的フォールバックを維持（同一パターン内での選択のため）
 
 **エラー処理方針**:
 
@@ -954,7 +955,7 @@ LineTemplate, BarTemplate, etc. (各30種)
     - `metadata`: `{ fallback_attempted: boolean, phase?: string }`
 
 > JSON Schemaは /docs/api-reference.md に集約。ここでは上記の最小キー構成のみ示す。
-> 
+>
 
 ### 7.3 内部データモデル（サマリ）
 
@@ -967,7 +968,7 @@ LineTemplate, BarTemplate, etc. (各30種)
 - `VisualizationResult`: { `image`, `format`, `metadata` }
 
 > ログには生データを出力しない。記録はサイズ・カラム名・行列数・型要約まで。
-> 
+>
 
 ### 7.4 データライフサイクル
 
@@ -1000,7 +1001,7 @@ LineTemplate, BarTemplate, etc. (各30種)
 
 - **tool name**: `chartelier_visualize`
 - **parameters**:
-    
+
     ```json
     {
       "type": "object",
@@ -1020,20 +1021,20 @@ LineTemplate, BarTemplate, etc. (各30種)
         }
       }
     }
-    
+
     ```
-    
+
 - **result**（成功時）:
-    
+
     ```json
     {
       "format": "png",
       "image": "<base64>",
       "metadata": { "...": "..." }
     }
-    
+
     ```
-    
+
 - **error**（MCP標準のerror.codeを使用。詳細は §9）
 
 ### 8.2 Function Calling（OpenAI/Anthropic）
@@ -1047,25 +1048,25 @@ LineTemplate, BarTemplate, etc. (各30種)
 - **POST** `/visualize`
     - **Request**: `application/json`（`VisualizeRequest`）
     - **200**:
-        
+
         ```json
         { "format": "svg", "image": "<svg string>", "metadata": { "...": "..." } }
-        
+
         ```
-        
+
     - **4xx/5xx**:
-        
+
         ```json
         { "error": { "code": "E422_UNPROCESSABLE", "message": "...", "hint": "...", "correlation_id": "..." } }
-        
+
         ```
-        
+
     - **Headers**:
         - `X-Chartelier-Request-Id`（相関ID）
         - `Cache-Control: no-store`（ステートレスで毎回処理）
 
 > Message Queue／Webhook連携は現時点では非対応（省略）。
-> 
+>
 
 
 ## 9. Error Handling Design
@@ -1097,8 +1098,9 @@ LineTemplate, BarTemplate, etc. (各30種)
 - **言語**：`options.locale` または `query`の自動判定に基づき ja/en を選択。
 - **ヒント**：**修正可能な提案**を常に含める（例：列名候補、型キャスト提案、サンプリング通知）。
 - **フォールバック**：
-    - LLM/テンプレート選択失敗 → **P13** で描画を試行
-    - それでも失敗 → **エラープレースホルダー画像**（SVG）＋`E500_INTERNAL`
+    - パターン選択失敗 → **E422_UNPROCESSABLE**エラーを返却
+    - チャート選択失敗 → パターン内のデフォルトチャート（折れ線等）で描画を試行
+    - レンダリング失敗 → **エラープレースホルダー画像**（SVG）＋`E500_INTERNAL`
 
 ### 9.4 リトライ方針
 
@@ -1171,7 +1173,7 @@ LineTemplate, BarTemplate, etc. (各30種)
 
 ### 11.5 運用フラグ（環境変数）
 
-- `CHARTELIER_DISABLE_LLM=true` → 常時P13
+- `CHARTELIER_DISABLE_LLM=true` → パターン選択不可（エラー返却）
 - `CHARTELIER_FORCE_FORMAT=svg|png`
 - `CHARTELIER_MAX_CONCURRENCY=8`
 - `CHARTELIER_LOG_LEVEL=info|debug`
@@ -1179,7 +1181,7 @@ LineTemplate, BarTemplate, etc. (各30種)
 ### 11.6 代表的インシデントと対処
 
 - **PNG生成失敗の多発**：`FORCE_FORMAT=svg`で回避 → 後日`vl-convert`更新
-- **LLM障害**：`DISABLE_LLM=true`でP13固定運転 → 復旧後に解除
+- **LLM障害**：サービス一時停止またはマニュアル運用 → 復旧後に再開
 - **レイテンシ劣化**：サンプリング閾値確認、テンプレ複雑度を削減（補助要素を最大1に一時制限）
 
 
