@@ -43,6 +43,7 @@ coverage.xml
 .pytype/
 .mypy_cache/
 .dmypy.json
+dmypy.json
 .ruff_cache/
 
 # ------------------------------------------------------------
