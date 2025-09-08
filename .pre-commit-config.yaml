@@ -20,18 +20,14 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+  - repo: local
     hooks:
       - id: mypy
-        additional_dependencies:
-          - types-requests>=2.32.0
-          - pydantic>=2.0.0
-          - pydantic-settings>=2.0.0
-          - types-toml>=0.10.8
-          - types-jinja2>=2.11.9
-        args: [--config-file=pyproject.toml, src]
+        name: mypy
+        entry: uv run tox -e type
+        language: system
         pass_filenames: false
+        files: \.py$
 
   - repo: local
     hooks:

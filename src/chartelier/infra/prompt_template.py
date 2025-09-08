@@ -207,7 +207,7 @@ class PromptTemplate:
         all_variables = set()
         for message in self.config.messages:
             ast = self.env.parse(message.content)
-            variables = meta.find_undeclared_variables(ast)  # type: ignore[no-untyped-call]
+            variables = meta.find_undeclared_variables(ast)
             all_variables.update(variables)
 
         return all_variables
