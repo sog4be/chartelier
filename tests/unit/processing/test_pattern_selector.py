@@ -1,6 +1,7 @@
 """Unit tests for PatternSelector component."""
 
 import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -236,3 +237,62 @@ class TestPatternSelector:
         assert "and 10 more columns" in data_info
         assert "Contains datetime" in data_info
         assert "Contains categorical" in data_info
+
+    def test_model_parameter_default(self, sample_metadata: DataMetadata) -> None:
+        """Test that default model is gpt-4o-mini."""
+        mock_response = json.dumps({"pattern_id": "P01", "reasoning": "Test"})
+        mock_client = MockLLMClient(default_response=mock_response)
+        selector = PatternSelector(llm_client=mock_client)
+
+        # Check default model is set
+        assert selector.model == "gpt-4o-mini"
+
+        # Execute selection and verify model is passed to LLM client
+        selector.select(sample_metadata, "Test query")
+        assert mock_client.last_kwargs.get("model") == "gpt-4o-mini"
+
+    def test_model_parameter_custom(self, sample_metadata: DataMetadata) -> None:
+        """Test using a custom model."""
+        mock_response = json.dumps({"pattern_id": "P02", "reasoning": "Test"})
+        mock_client = MockLLMClient(default_response=mock_response)
+        custom_model = "gpt-4-turbo"
+        selector = PatternSelector(llm_client=mock_client, model=custom_model)
+
+        # Check custom model is set
+        assert selector.model == custom_model
+
+        # Execute selection and verify model is passed to LLM client
+        selector.select(sample_metadata, "Test query")
+        assert mock_client.last_kwargs.get("model") == custom_model
+
+    @patch("chartelier.processing.pattern_selector.processor.PromptTemplate")
+    def test_model_to_prompt_version_mapping(
+        self, mock_template_class: MagicMock, sample_metadata: DataMetadata
+    ) -> None:
+        """Test that model-specific prompt versions are loaded correctly."""
+        # Setup mock
+        mock_template_instance = MagicMock()
+        mock_template_class.from_component.return_value = mock_template_instance
+
+        # Test gpt-4o-mini uses v0.1.0
+        mock_client = MockLLMClient()
+        PatternSelector(llm_client=mock_client, model="gpt-4o-mini")
+
+        # Verify from_component was called with v0.1.0
+        call_args = mock_template_class.from_component.call_args
+        assert call_args[0][1] == "v0.1.0"
+
+        # Reset mock
+        mock_template_class.reset_mock()
+
+        # Test unknown model uses default version
+        PatternSelector(llm_client=mock_client, model="claude-3-opus")
+        call_args = mock_template_class.from_component.call_args
+        assert call_args[0][1] == "v0.1.0"  # Should use default
+
+    def test_prompt_version_constants(self) -> None:
+        """Test that class constants are properly defined."""
+        assert PatternSelector.DEFAULT_MODEL == "gpt-4o-mini"
+        assert PatternSelector.DEFAULT_PROMPT_VERSION == "v0.1.0"
+        assert "gpt-4o-mini" in PatternSelector.MODEL_PROMPT_VERSIONS
+        assert PatternSelector.MODEL_PROMPT_VERSIONS["gpt-4o-mini"] == "v0.1.0"

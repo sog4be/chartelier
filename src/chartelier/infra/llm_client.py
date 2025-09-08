@@ -358,13 +358,14 @@ class MockLLMClient(BaseLLMClient):
         self.simulate_error = simulate_error
         self.call_count = 0
         self.last_messages: list[LLMMessage] | None = None
+        self.last_kwargs: dict[str, Any] = {}
 
     def complete(
         self,
         messages: list[LLMMessage],
         *,
         response_format: ResponseFormat = ResponseFormat.TEXT,
-        **kwargs: Any,  # noqa: ANN401, ARG002 — Mock interface compatibility
+        **kwargs: Any,  # noqa: ANN401 — Mock interface compatibility
     ) -> LLMResponse:
         """Mock completion that returns predefined responses.
 
@@ -378,6 +379,7 @@ class MockLLMClient(BaseLLMClient):
         """
         self.call_count += 1
         self.last_messages = messages
+        self.last_kwargs = kwargs
 
         # Simulate timeout
         if self.simulate_timeout:
