@@ -171,3 +171,6 @@ Desktop.ini
 # etc.
 # ------------------------------------------------------------
 **/temp/
+
+# Test outputs for visual inspection
+test_outputs/

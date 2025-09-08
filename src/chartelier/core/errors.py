@@ -291,6 +291,51 @@ class DependencyUnavailableError(ChartelierError):
         )
 
 
+class ChartBuildError(BusinessError):
+    """Raised when chart building fails."""
+
+    def __init__(
+        self,
+        message: str,
+        template_id: str | None = None,
+        hint: str | None = None,
+    ):
+        """Initialize chart build error."""
+        if not hint:
+            hint = "Failed to build the chart. Check data compatibility with the selected template."
+            if template_id:
+                hint = f"Failed to build chart with template '{template_id}'. " + hint
+
+        super().__init__(
+            message=message,
+            hint=hint,
+            phase=PipelinePhase.CHART_BUILDING,
+        )
+
+
+class ExportError(SystemError):
+    """Raised when chart export fails."""
+
+    def __init__(
+        self,
+        message: str,
+        format: str | None = None,  # noqa: A002 — format parameter refers to file format
+    ):
+        """Initialize export error."""
+        hint = "Failed to export the chart."
+        if format:
+            hint = (
+                f"Failed to export chart as {format}. "
+                "The chart may be too complex or the export format may not be supported."
+            )
+
+        super().__init__(
+            message=message,
+            phase=PipelinePhase.CHART_BUILDING,
+        )
+        self.hint = hint
+
+
 def map_to_mcp_error_code(error: ChartelierError) -> MCPErrorCode:
     """Map Chartelier error to MCP error code.
 
