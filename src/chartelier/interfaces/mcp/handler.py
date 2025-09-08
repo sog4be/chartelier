@@ -20,6 +20,7 @@ from chartelier.interfaces.mcp.protocol import (
     ToolsListResult,
     get_chartelier_tool,
 )
+from chartelier.interfaces.validators import RequestValidator
 
 logger = get_logger(__name__)
 
@@ -31,6 +32,7 @@ class MCPHandler:
         """Initialize the MCP handler."""
         self.initialized = False
         self.request_count = 0
+        self.validator = RequestValidator()
 
     def handle_message(self, message: str) -> str | None:
         """Handle a JSON-RPC message and return response.
@@ -184,6 +186,33 @@ class MCPHandler:
                 )
                 return error_result.model_dump(by_alias=True)
 
+            # Validate request using RequestValidator
+            try:
+                validated_request = self.validator.validate(call_params.arguments or {})
+                logger.info(
+                    "Request validated successfully",
+                    extra={
+                        "data_format": validated_request.data_format,
+                        "data_size_bytes": validated_request.data_size_bytes,
+                        "query_length": len(validated_request.query),
+                    },
+                )
+            except ChartelierError as e:
+                logger.warning("Request validation failed: %s", e)
+                error_result = ToolCallResult(
+                    content=[TextContent(text=f"Validation error: {e.message}")],
+                    structuredContent={
+                        "error": {
+                            "code": e.code.value,
+                            "message": e.message,
+                            "hint": e.hint,
+                            "details": e.details,
+                        }
+                    },
+                    isError=True,
+                )
+                return error_result.model_dump(by_alias=True)
+
             # For now, return a placeholder response
             # This will be replaced with actual Coordinator call in PR-C3
             placeholder_result = ToolCallResult(
@@ -196,6 +225,7 @@ class MCPHandler:
                     "metadata": {
                         "status": "not_implemented",
                         "message": "Coordinator integration pending (PR-C3)",
+                        "validated_data_format": validated_request.data_format,
                     }
                 },
                 isError=True,
