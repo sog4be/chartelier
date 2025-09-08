@@ -14,7 +14,7 @@ import sys
 from datetime import UTC, datetime
 from typing import Any
 
-__all__ = ["StructuredLogger", "get_logger", "redact_query"]
+__all__ = ["StructuredLogger", "configure_logging", "get_logger", "redact_query"]
 
 
 class StructuredFormatter(logging.Formatter):
@@ -92,25 +92,33 @@ class StructuredLogger:
         extra = dict(kwargs)
         self._logger.log(level, msg, extra=extra)
 
-    def debug(self, msg: str, **kwargs: Any) -> None:
+    def debug(self, msg: str, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
         """Log debug message."""
         self._log(logging.DEBUG, msg, **kwargs)
 
-    def info(self, msg: str, **kwargs: Any) -> None:
+    def info(self, msg: str, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
         """Log info message."""
         self._log(logging.INFO, msg, **kwargs)
 
-    def warning(self, msg: str, **kwargs: Any) -> None:
+    def warning(self, msg: str, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
         """Log warning message."""
         self._log(logging.WARNING, msg, **kwargs)
 
-    def error(self, msg: str, **kwargs: Any) -> None:
+    def error(self, msg: str, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
         """Log error message."""
         self._log(logging.ERROR, msg, **kwargs)
 
-    def critical(self, msg: str, **kwargs: Any) -> None:
+    def critical(self, msg: str, *args: Any, **kwargs: Any) -> None:  # noqa: ARG002
         """Log critical message."""
         self._log(logging.CRITICAL, msg, **kwargs)
+
+    def exception(self, msg: str, **kwargs: Any) -> None:
+        """Log exception with traceback."""
+        import traceback
+
+        extra = dict(kwargs)
+        extra["traceback"] = traceback.format_exc()
+        self._logger.exception(msg, extra=extra)
 
 
 def get_logger(name: str) -> StructuredLogger:
@@ -137,6 +145,28 @@ def get_logger(name: str) -> StructuredLogger:
         logger.setLevel(level)
 
     return StructuredLogger(logger)
+
+
+def configure_logging(level: int = logging.INFO, stream: Any = sys.stdout) -> None:
+    """Configure global logging settings for Chartelier.
+
+    Args:
+        level: Logging level (default: INFO).
+        stream: Output stream (default: stdout).
+    """
+    root_logger = logging.getLogger()
+
+    # Clear any existing handlers
+    root_logger.handlers.clear()
+
+    # Create and configure new handler
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(StructuredFormatter())
+    root_logger.addHandler(handler)
+    root_logger.setLevel(level)
+
+    # Prevent propagation
+    root_logger.propagate = False
 
 
 def redact_query(query: str, threshold: int = 16) -> str:

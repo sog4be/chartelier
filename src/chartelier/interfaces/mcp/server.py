@@ -1,25 +1,55 @@
 """MCP server entry point for Chartelier."""
 
 import argparse
-import json
 import logging
 import sys
 
-# Configure logging
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stderr,
-)
-logger = logging.getLogger(__name__)
+from chartelier.infra.logging import configure_logging, get_logger
+from chartelier.interfaces.mcp.handler import MCPHandler
+
+# Configure logging for stderr (MCP uses stdout for protocol)
+configure_logging(level=logging.WARNING, stream=sys.stderr)
+logger = get_logger(__name__)
+
+
+def run_stdio_server(handler: MCPHandler, debug: bool = False) -> None:
+    """Run the MCP server in stdio mode.
+
+    Args:
+        handler: MCP protocol handler
+        debug: Enable debug logging
+    """
+    if debug:
+        logger.info("Starting Chartelier MCP server in stdio mode (debug enabled)")
+    else:
+        logger.debug("Starting Chartelier MCP server in stdio mode")
+
+    try:
+        # Read JSON-RPC messages from stdin line by line
+        for line in sys.stdin:
+            line_stripped = line.strip()
+            if not line_stripped:
+                continue
+
+            # Handle the message
+            response = handler.handle_message(line_stripped)
+
+            # Send response if one was generated
+            if response:
+                sys.stdout.write(response + "\n")
+                sys.stdout.flush()
+
+    except KeyboardInterrupt:
+        logger.debug("Server interrupted by user")
+    except EOFError:
+        logger.debug("Input stream closed")
+    except Exception:
+        logger.exception("Unexpected error in server loop")
+        sys.exit(1)
 
 
 def main() -> None:
-    """Main entry point for the Chartelier MCP server.
-
-    This is a minimal implementation that will be expanded in future PRs.
-    Currently, it only provides basic CLI functionality for testing.
-    """
+    """Main entry point for the Chartelier MCP server."""
     parser = argparse.ArgumentParser(
         prog="chartelier-mcp",
         description="Chartelier MCP Server - MCP-compliant visualization tool for AI agents",
@@ -35,12 +65,13 @@ Examples:
   # Show this help message
   chartelier-mcp --help
 
-Note: This is a minimal implementation. Full MCP functionality will be added in subsequent PRs.
+The server communicates via JSON-RPC 2.0 over stdio.
+Logging output goes to stderr, protocol messages to stdout.
         """.strip(),
     )
 
     parser.add_argument(
-        "--version", action="version", version="chartelier-mcp 0.1.0", help="show version information and exit"
+        "--version", action="version", version="chartelier-mcp 0.2.0", help="show version information and exit"
     )
 
     parser.add_argument(
@@ -51,37 +82,18 @@ Note: This is a minimal implementation. Full MCP functionality will be added in 
 
     args = parser.parse_args()
 
-    # Set logging level based on debug flag
+    # Configure logging level
     if args.debug:
-        logger.setLevel(logging.DEBUG)
-        logging.getLogger().setLevel(logging.DEBUG)
+        configure_logging(level=logging.DEBUG, stream=sys.stderr)
+
+    # Create handler and run server
+    handler = MCPHandler()
 
     if args.mode == "stdio":
-        # Minimal stdio mode implementation
-        # Full MCP server implementation will be added in PR-C1
-        logger.debug("Starting Chartelier MCP server in stdio mode")
-
-        # For now, just echo a minimal response to show the server is working
-        # This will be replaced with proper MCP protocol handling in PR-C1
-        try:
-            # Read a single line for testing purposes
-            # In the full implementation, this will be a proper JSON-RPC loop
-            line = sys.stdin.readline()
-            if line:
-                # Echo back a minimal response
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "result": {"message": "Chartelier MCP server is running (minimal mode)", "version": "0.1.0"},
-                }
-                sys.stdout.write(json.dumps(response) + "\n")
-                sys.stdout.flush()
-        except KeyboardInterrupt:
-            logger.debug("Server interrupted")
-            sys.exit(0)
-        except Exception:
-            logger.exception("Error in server")
-            sys.exit(1)
+        run_stdio_server(handler, debug=args.debug)
+    else:
+        logger.error("Unsupported mode: %s", args.mode)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

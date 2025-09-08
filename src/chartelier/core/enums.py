@@ -38,6 +38,7 @@ class ErrorCode(str, Enum):
 class MCPErrorCode(IntEnum):
     """MCP JSON-RPC 2.0 standard error codes."""
 
+    PARSE_ERROR = -32700  # Parse error
     INVALID_REQUEST = -32600
     METHOD_NOT_FOUND = -32601
     INVALID_PARAMS = -32602
