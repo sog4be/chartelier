@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import sys
+import traceback
 from datetime import UTC, datetime
 from typing import Any
 
@@ -114,8 +115,6 @@ class StructuredLogger:
 
     def exception(self, msg: str, **kwargs: Any) -> None:
         """Log exception with traceback."""
-        import traceback
-
         extra = dict(kwargs)
         extra["traceback"] = traceback.format_exc()
         self._logger.exception(msg, extra=extra)
