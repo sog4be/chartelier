@@ -54,7 +54,7 @@ class PatternSelector:
 
     # Model to prompt version mapping
     MODEL_PROMPT_VERSIONS: ClassVar[dict[str, str]] = {
-        "gpt-4o-mini": "v0.1.0",  # Recommended version for gpt-4o-mini
+        "gpt-5-mini": "v0.1.0",  # Recommended version for gpt-5-mini
         # Add more model-specific versions as needed
     }
 
@@ -62,14 +62,14 @@ class PatternSelector:
     DEFAULT_PROMPT_VERSION: ClassVar[str] = "v0.1.0"
 
     # Default model to use
-    DEFAULT_MODEL: ClassVar[str] = "gpt-4o-mini"
+    DEFAULT_MODEL: ClassVar[str] = "gpt-5-mini"
 
     def __init__(self, llm_client: LLMClient | None = None, model: str | None = None) -> None:
         """Initialize the pattern selector.
 
         Args:
             llm_client: LLM client for pattern classification
-            model: Model name to use for pattern classification (default: gpt-4o-mini)
+            model: Model name to use for pattern classification (default: gpt-5-mini)
         """
         self.llm_client = llm_client or get_llm_client()
         self.logger = get_logger(self.__class__.__name__)

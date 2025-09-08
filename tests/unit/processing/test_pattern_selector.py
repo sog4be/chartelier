@@ -239,17 +239,17 @@ class TestPatternSelector:
         assert "Contains categorical" in data_info
 
     def test_model_parameter_default(self, sample_metadata: DataMetadata) -> None:
-        """Test that default model is gpt-4o-mini."""
+        """Test that default model is gpt-5-mini."""
         mock_response = json.dumps({"pattern_id": "P01", "reasoning": "Test"})
         mock_client = MockLLMClient(default_response=mock_response)
         selector = PatternSelector(llm_client=mock_client)
 
         # Check default model is set
-        assert selector.model == "gpt-4o-mini"
+        assert selector.model == "gpt-5-mini"
 
         # Execute selection and verify model is passed to LLM client
         selector.select(sample_metadata, "Test query")
-        assert mock_client.last_kwargs.get("model") == "gpt-4o-mini"
+        assert mock_client.last_kwargs.get("model") == "gpt-5-mini"
 
     def test_model_parameter_custom(self, sample_metadata: DataMetadata) -> None:
         """Test using a custom model."""
@@ -274,9 +274,9 @@ class TestPatternSelector:
         mock_template_instance = MagicMock()
         mock_template_class.from_component.return_value = mock_template_instance
 
-        # Test gpt-4o-mini uses v0.1.0
+        # Test gpt-5-mini uses v0.1.0
         mock_client = MockLLMClient()
-        PatternSelector(llm_client=mock_client, model="gpt-4o-mini")
+        PatternSelector(llm_client=mock_client, model="gpt-5-mini")
 
         # Verify from_component was called with v0.1.0
         call_args = mock_template_class.from_component.call_args
@@ -292,7 +292,7 @@ class TestPatternSelector:
 
     def test_prompt_version_constants(self) -> None:
         """Test that class constants are properly defined."""
-        assert PatternSelector.DEFAULT_MODEL == "gpt-4o-mini"
+        assert PatternSelector.DEFAULT_MODEL == "gpt-5-mini"
         assert PatternSelector.DEFAULT_PROMPT_VERSION == "v0.1.0"
-        assert "gpt-4o-mini" in PatternSelector.MODEL_PROMPT_VERSIONS
-        assert PatternSelector.MODEL_PROMPT_VERSIONS["gpt-4o-mini"] == "v0.1.0"
+        assert "gpt-5-mini" in PatternSelector.MODEL_PROMPT_VERSIONS
+        assert PatternSelector.MODEL_PROMPT_VERSIONS["gpt-5-mini"] == "v0.1.0"
