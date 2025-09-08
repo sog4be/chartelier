@@ -1,5 +1,6 @@
 """Unit tests for PromptTemplate utility."""
 
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -14,44 +15,44 @@ class TestPromptTemplate:
     @pytest.fixture
     def simple_prompt_toml(self) -> str:
         """Create a simple prompt TOML content."""
-        return """
-version = "v0.1.0"
+        return textwrap.dedent("""\
+            version = "v0.1.0"
 
-[[messages]]
-role = "system"
-content = "You are a helpful assistant."
+            [[messages]]
+            role = "system"
+            content = "You are a helpful assistant."
 
-[[messages]]
-role = "user"
-content = "Hello {{ name }}, your task is: {{ task }}"
-do_strip = true
-"""
+            [[messages]]
+            role = "user"
+            content = "Hello {{ name }}, your task is: {{ task }}"
+            do_strip = true
+        """)
 
     @pytest.fixture
     def complex_prompt_toml(self) -> str:
         """Create a complex prompt TOML with multiple variables."""
-        return """
-version = "v0.2.0"
+        return textwrap.dedent("""\
+            version = "v0.2.0"
 
-[[messages]]
-role = "system"
-content = '''
-You are an expert in {{ domain }}.
-Your expertise level is {{ level }}.
-'''
-do_strip = true
+            [[messages]]
+            role = "system"
+            content = '''
+            You are an expert in {{ domain }}.
+            Your expertise level is {{ level }}.
+            '''
+            do_strip = true
 
-[[messages]]
-role = "user"
-content = '''
-{% for item in items %}
-- {{ item }}
-{% endfor %}
+            [[messages]]
+            role = "user"
+            content = '''
+            {% for item in items %}
+            - {{ item }}
+            {% endfor %}
 
-Task: {{ task }}
-'''
-do_strip = false
-"""
+            Task: {{ task }}
+            '''
+            do_strip = false
+        """)
 
     def test_load_valid_toml(self, simple_prompt_toml: str, tmp_path: Path) -> None:
         """Test loading a valid TOML file."""
@@ -124,19 +125,19 @@ do_strip = false
 
     def test_strip_whitespace(self, tmp_path: Path) -> None:
         """Test that do_strip correctly strips whitespace."""
-        toml_content = """
-version = "v0.1.0"
+        toml_content = textwrap.dedent("""\
+            version = "v0.1.0"
 
-[[messages]]
-role = "user"
-content = "   Content with spaces   "
-do_strip = true
+            [[messages]]
+            role = "user"
+            content = "   Content with spaces   "
+            do_strip = true
 
-[[messages]]
-role = "assistant"
-content = "   Content with spaces   "
-do_strip = false
-"""
+            [[messages]]
+            role = "assistant"
+            content = "   Content with spaces   "
+            do_strip = false
+        """)
         prompt_file = tmp_path / "test_prompt.toml"
         prompt_file.write_text(toml_content)
         template = PromptTemplate(prompt_file)
@@ -158,13 +159,13 @@ do_strip = false
 
     def test_invalid_role_error(self, tmp_path: Path) -> None:
         """Test that invalid role raises validation error."""
-        toml_content = """
-version = "v0.1.0"
+        toml_content = textwrap.dedent("""\
+            version = "v0.1.0"
 
-[[messages]]
-role = "invalid_role"
-content = "Test content"
-"""
+            [[messages]]
+            role = "invalid_role"
+            content = "Test content"
+        """)
         prompt_file = tmp_path / "test.toml"
         prompt_file.write_text(toml_content)
 
@@ -210,13 +211,13 @@ content = "Test content"
 
     def test_invalid_jinja2_template(self, tmp_path: Path) -> None:
         """Test that invalid Jinja2 syntax raises error."""
-        toml_content = """
-version = "v0.1.0"
+        toml_content = textwrap.dedent("""\
+            version = "v0.1.0"
 
-[[messages]]
-role = "user"
-content = "Invalid template {{ name"
-"""
+            [[messages]]
+            role = "user"
+            content = "Invalid template {{ name"
+        """)
         prompt_file = tmp_path / "test.toml"
         prompt_file.write_text(toml_content)
 

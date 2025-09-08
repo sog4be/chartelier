@@ -1,6 +1,7 @@
 """Integration tests for PatternSelector with other components."""
 
 import json
+import textwrap
 
 import polars as pl
 import pytest
@@ -18,12 +19,14 @@ class TestPatternSelectorIntegration:
     @pytest.fixture
     def sample_csv_data(self) -> str:
         """Create sample CSV data."""
-        return """date,sales,region,product
-2024-01-01,1000.50,North,Widget A
-2024-01-02,1200.75,South,Widget B
-2024-01-03,950.25,East,Widget A
-2024-01-04,1100.00,West,Widget C
-2024-01-05,1300.50,North,Widget B"""
+        return textwrap.dedent("""\
+            date,sales,region,product
+            2024-01-01,1000.50,North,Widget A
+            2024-01-02,1200.75,South,Widget B
+            2024-01-03,950.25,East,Widget A
+            2024-01-04,1100.00,West,Widget C
+            2024-01-05,1300.50,North,Widget B\
+        """)
 
     @pytest.fixture
     def sample_json_data(self) -> str:
