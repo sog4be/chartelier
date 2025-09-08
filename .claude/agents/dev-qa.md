@@ -2,7 +2,7 @@
 name: dev-qa
 description: Run ruff format + ruff --fix, lint check, mypy strict, and pytest for chartelier. Apply safe fixes automatically; propose diffs for risky changes.
 tools: Bash, Glob, Grep, Read, Edit, MultiEdit, Write, WebFetch, TodoWrite, WebSearch, BashOutput, KillBash
-model: opus
+model: sonnet
 color: green
 ---
 
