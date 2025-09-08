@@ -1157,7 +1157,11 @@ LineTemplate, BarTemplate, etc. (各30種)
 ### 11.2 ログ（JSON構造化）
 
 - 共通フィールド：`ts`, `level`, `correlation_id`, `phase`, `duration_ms`, `rows`, `cols`, `pattern_id?`, `template_id?`, `fallback_applied`
-- **ペイロード不記録**。クエリは**ハッシュ/部分マスク**。
+- **PII防止方針**：
+  - データの値やセル内容は**一切ログに含めない**（各コンポーネントの実装責任）
+  - 記録するのは**メタデータのみ**（行列数、カラム名、型情報等）
+  - クエリ文字列のみ**部分マスク**（16文字以上の非数値部分をハッシュ化）
+  - logging.pyは構造化ログの仕組みのみ提供、PII防止は利用側の責任
 
 ### 11.3 トレース（OpenTelemetry）
 
