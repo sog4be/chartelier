@@ -13,3 +13,6 @@ Visualization policy document. Mandatory rules for creating honest and reproduci
 
 ### [mcp-integration.md](./mcp-integration.md)
 MCP integration specification. Implementation details as a Model Context Protocol compliant tool server. Includes schema for the `chartelier_visualize` tool, timeout handling, error processing, and minimal E2E procedures.
+
+### [api-reference.md](./api-reference.md)
+API reference documentation. Comprehensive JSON Schema definitions for all input/output formats including VisualizeRequest, VisualizeResponse, and ErrorResponse. Covers MCP tool schema, REST API schema, and common data models with detailed examples.
