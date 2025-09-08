@@ -95,6 +95,7 @@ ignore = [
     "A001",    # Variable is shadowing a Python builtin (needed for SystemError, TimeoutError)
     "PLR2004", # Magic value used in comparison (10 is reasonable for column limit)
     "UP038",   # Use X | Y in isinstance (needs Python 3.10+, we support 3.11)
+    "ANN401",  # Dynamically typed expressions (Any) are needed for **kwargs in logging
 ]
 
 [tool.ruff.lint.per-file-ignores]
