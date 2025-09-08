@@ -51,54 +51,6 @@ class PatternSelection(BaseModel):
 class PatternSelector:
     """Selects visualization patterns based on data and query."""
 
-    # Pattern definitions for prompt
-    PATTERN_DEFINITIONS = """
-    Visualization patterns are organized in a 3x3 matrix:
-
-    Primary Intent (rows):
-    - Transition: Show changes over time
-    - Difference: Compare between categories
-    - Overview: Show distribution or composition
-
-    Secondary Intent (columns):
-    - None: Single intent only
-    - Transition: Add time aspect
-    - Difference: Add comparison aspect
-    - Overview: Add distribution aspect
-
-    The 9 patterns:
-    - P01 (Transition only): Single time series trend
-    - P02 (Difference only): Category comparison
-    - P03 (Overview only): Distribution or composition
-    - P12 (Transition + Difference): Multiple time series comparison
-    - P13 (Transition + Overview): Distribution changes over time
-    - P21 (Difference + Transition): Category differences over time
-    - P23 (Difference + Overview): Category-wise distribution comparison
-    - P31 (Overview + Transition): Overall picture changes over time
-    - P32 (Overview + Difference): Distribution comparison between categories
-    """
-
-    # Few-shot examples for better accuracy
-    FEW_SHOT_EXAMPLES = """
-    Examples:
-
-    Query: "Show monthly sales trend"
-    Data: Has date column, numeric sales column
-    Pattern: P01 (single time series)
-
-    Query: "Compare revenue by region"
-    Data: Has region categories, revenue values
-    Pattern: P02 (category comparison)
-
-    Query: "Show how customer age distribution changed over years"
-    Data: Has age values, year column
-    Pattern: P13 (distribution over time)
-
-    Query: "Compare product sales trends across categories"
-    Data: Has dates, categories, sales values
-    Pattern: P12 (multiple time series comparison)
-    """
-
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         """Initialize the pattern selector.
 
@@ -142,8 +94,6 @@ class PatternSelector:
             messages = self.prompt_template.render(
                 query=query,
                 data_info=data_info,
-                pattern_definitions=self.PATTERN_DEFINITIONS,
-                few_shot_examples=self.FEW_SHOT_EXAMPLES,
             )
 
             response = self.llm_client.complete(

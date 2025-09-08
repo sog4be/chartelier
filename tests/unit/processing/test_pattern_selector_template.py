@@ -116,8 +116,6 @@ class TestPatternSelectorTemplate:
         assert "query" in render_kwargs
         assert render_kwargs["query"] == "Test query"
         assert "data_info" in render_kwargs
-        assert "pattern_definitions" in render_kwargs
-        assert "few_shot_examples" in render_kwargs
 
     def test_prompt_template_variables_complete(self, sample_metadata: DataMetadata) -> None:
         """Test that all required template variables are provided."""
@@ -127,5 +125,5 @@ class TestPatternSelectorTemplate:
         required_vars = selector.prompt_template.get_required_variables()
 
         # Check that we know about all required variables
-        expected_vars = {"query", "data_info", "pattern_definitions", "few_shot_examples"}
+        expected_vars = {"query", "data_info"}
         assert required_vars == expected_vars, f"Template requires {required_vars}, expected {expected_vars}"
