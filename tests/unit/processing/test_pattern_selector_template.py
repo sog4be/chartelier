@@ -84,7 +84,7 @@ class TestPatternSelectorTemplate:
         assert "1,000" in user_content  # Row count
         assert "datetime" in user_content.lower()
 
-    @patch("chartelier.processing.pattern_selector.selector.PromptTemplate")
+    @patch("chartelier.processing.pattern_selector.processor.PromptTemplate")
     def test_prompt_template_called_correctly(
         self, mock_template_class: MagicMock, sample_metadata: DataMetadata
     ) -> None:
