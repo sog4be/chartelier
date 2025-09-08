@@ -1,6 +1,7 @@
 """Integration tests for data flow through the system."""
 
 import json
+from textwrap import dedent
 
 import polars as pl
 import pytest
@@ -19,14 +20,16 @@ class TestDataFlow:
     def test_csv_to_dataframe_flow(self, validator):
         """Test complete flow from CSV string to validated DataFrame."""
         # IT-DATA-010: CSV data flow
-        csv_data = """date,sales,region,product
-2024-01-01,1000,North,Widget
-2024-01-02,1500,South,Gadget
-2024-01-03,1200,North,Widget
-2024-01-04,1800,East,Gadget
-2024-01-05,900,West,Widget
-2024-01-06,2000,South,Gadget
-2024-01-07,1100,North,Widget"""
+        csv_data = dedent("""\
+            date,sales,region,product
+            2024-01-01,1000,North,Widget
+            2024-01-02,1500,South,Gadget
+            2024-01-03,1200,North,Widget
+            2024-01-04,1800,East,Gadget
+            2024-01-05,900,West,Widget
+            2024-01-06,2000,South,Gadget
+            2024-01-07,1100,North,Widget
+        """).strip()
 
         # Validate the data
         result = validator.validate(csv_data, "csv")
@@ -104,12 +107,14 @@ class TestDataFlow:
 
     def test_mixed_data_types_flow(self, validator):
         """Test flow with mixed data types."""
-        csv_data = """id,name,age,score,is_active,joined_date,tags
-1,Alice,25,85.5,true,2024-01-15,python;sql
-2,Bob,30,92.0,false,2024-02-20,java;spring
-3,Charlie,28,78.5,true,2024-01-10,javascript;react
-4,Diana,35,88.0,true,2024-03-01,python;django
-5,Eve,27,95.5,false,2024-02-15,go;kubernetes"""
+        csv_data = dedent("""\
+            id,name,age,score,is_active,joined_date,tags
+            1,Alice,25,85.5,true,2024-01-15,python;sql
+            2,Bob,30,92.0,false,2024-02-20,java;spring
+            3,Charlie,28,78.5,true,2024-01-10,javascript;react
+            4,Diana,35,88.0,true,2024-03-01,python;django
+            5,Eve,27,95.5,false,2024-02-15,go;kubernetes
+        """).strip()
 
         result = validator.validate(csv_data, "csv")
 
@@ -131,12 +136,14 @@ class TestDataFlow:
 
     def test_null_handling_flow(self, validator):
         """Test flow with null values."""
-        csv_data = """col1,col2,col3,col4
-1,2.5,hello,2024-01-01
-2,,world,2024-01-02
-,3.5,test,
-4,4.5,,2024-01-04
-5,5.5,sample,"""
+        csv_data = dedent("""\
+            col1,col2,col3,col4
+            1,2.5,hello,2024-01-01
+            2,,world,2024-01-02
+            ,3.5,test,
+            4,4.5,,2024-01-04
+            5,5.5,sample,
+        """).strip()
 
         result = validator.validate(csv_data, "csv")
 

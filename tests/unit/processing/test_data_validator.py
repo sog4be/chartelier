@@ -1,6 +1,7 @@
 """Unit tests for DataValidator."""
 
 import json
+from textwrap import dedent
 
 import polars as pl
 import pytest
@@ -21,12 +22,14 @@ class TestDataValidator:
     @pytest.fixture
     def sample_csv(self):
         """Sample CSV data."""
-        return """date,value,category
-2024-01-01,100,A
-2024-01-02,150,B
-2024-01-03,200,A
-2024-01-04,120,C
-2024-01-05,180,B"""
+        return dedent("""\
+            date,value,category
+            2024-01-01,100,A
+            2024-01-02,150,B
+            2024-01-03,200,A
+            2024-01-04,120,C
+            2024-01-05,180,B
+        """).strip()
 
     @pytest.fixture
     def sample_json(self):
@@ -157,11 +160,13 @@ class TestDataValidator:
 
     def test_null_ratio_calculation(self, validator):
         """Test null ratio calculation."""
-        csv_with_nulls = """col1,col2,col3
-1,2,3
-4,,6
-7,8,
-,,12"""
+        csv_with_nulls = dedent("""\
+            col1,col2,col3
+            1,2,3
+            4,,6
+            7,8,
+            ,,12
+        """).strip()
         result = validator.validate(csv_with_nulls, "csv")
 
         assert result.metadata.null_ratio["col1"] == 0.25  # 1 null out of 4
@@ -170,10 +175,12 @@ class TestDataValidator:
 
     def test_dtype_detection(self, validator):
         """Test data type detection."""
-        mixed_csv = """int_col,float_col,str_col,bool_col,date_col
-1,1.5,hello,true,2024-01-01
-2,2.5,world,false,2024-01-02
-3,3.5,test,true,2024-01-03"""
+        mixed_csv = dedent("""\
+            int_col,float_col,str_col,bool_col,date_col
+            1,1.5,hello,true,2024-01-01
+            2,2.5,world,false,2024-01-02
+            3,3.5,test,true,2024-01-03
+        """).strip()
 
         result = validator.validate(mixed_csv, "csv")
 
@@ -187,15 +194,17 @@ class TestDataValidator:
     def test_category_detection(self, validator):
         """Test categorical column detection."""
         # More rows with fewer categories to trigger categorical detection
-        csv_with_categories = """id,category,value
-1,A,100
-2,B,200
-3,A,150
-4,A,175
-5,B,225
-6,A,130
-7,B,245
-8,A,155"""
+        csv_with_categories = dedent("""\
+            id,category,value
+            1,A,100
+            2,B,200
+            3,A,150
+            4,A,175
+            5,B,225
+            6,A,130
+            7,B,245
+            8,A,155
+        """).strip()
 
         result = validator.validate(csv_with_categories, "csv")
         assert result.metadata.has_category is True  # 2 unique values out of 8 rows (25%)
