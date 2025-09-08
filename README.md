@@ -16,6 +16,68 @@ Now, AI agents generate visualizations at scale, but they do so blindly. LLMs ca
 
 Users get reliable visualizations by default, without even thinking about it. The way it always should have been.
 
+## Quick Start
+
+### Installation
+
+```bash
+# Install from source (PyPI release coming soon)
+git clone https://github.com/yourusername/chartelier.git
+cd chartelier
+uv sync
+```
+
+### Usage
+
+#### As an MCP Server
+
+Chartelier provides an MCP (Model Context Protocol) server that can be used with Claude Desktop, VSCode, or other MCP-compatible clients:
+
+```bash
+# Start the MCP server (stdio mode)
+chartelier-mcp
+
+# Show available options
+chartelier-mcp --help
+```
+
+#### MCP Configuration Example
+
+To use with Claude Desktop, add to your MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "chartelier": {
+      "command": "chartelier-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+The server exposes the `chartelier_visualize` tool that accepts:
+- `data`: CSV or JSON data as a string
+- `query`: Natural language description of the desired visualization
+- `options`: Optional formatting parameters (format, dpi, width, height, locale)
+
+Example usage from an AI agent:
+```json
+{
+  "tool": "chartelier_visualize",
+  "parameters": {
+    "data": "date,sales\\n2024-01,100\\n2024-02,150\\n2024-03,120",
+    "query": "Show monthly sales trend",
+    "options": {
+      "format": "png",
+      "width": 800,
+      "height": 600
+    }
+  }
+}
+```
+
 ## Development Setup
 
 ### Prerequisites
