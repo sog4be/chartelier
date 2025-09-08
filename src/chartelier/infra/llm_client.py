@@ -42,7 +42,7 @@ class LLMResponse(BaseModel):
     finish_reason: str | None = Field(None, description="Reason for completion")
 
 
-class LLMSettings(BaseSettings):  # type: ignore[misc]
+class LLMSettings(BaseSettings):
     """Settings for LLM client configuration."""
 
     model_config = SettingsConfigDict(
