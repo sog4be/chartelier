@@ -21,6 +21,7 @@ from chartelier.interfaces.mcp.protocol import (
     get_chartelier_tool,
 )
 from chartelier.interfaces.validators import RequestValidator
+from chartelier.orchestration import Coordinator
 
 logger = get_logger(__name__)
 
@@ -33,6 +34,7 @@ class MCPHandler:
         self.initialized = False
         self.request_count = 0
         self.validator = RequestValidator()
+        self.coordinator = Coordinator()
 
     def handle_message(self, message: str) -> str | None:
         """Handle a JSON-RPC message and return response.
@@ -147,7 +149,7 @@ class MCPHandler:
         result = ToolsListResult(tools=[tool])
         return result.model_dump(by_alias=True)
 
-    def _handle_tools_call(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _handle_tools_call(self, params: dict[str, Any]) -> dict[str, Any]:  # noqa: PLR0911
         """Handle tools/call request.
 
         Args:
@@ -213,24 +215,32 @@ class MCPHandler:
                 )
                 return error_result.model_dump(by_alias=True)
 
-            # For now, return a placeholder response
-            # This will be replaced with actual Coordinator call in PR-C3
-            placeholder_result = ToolCallResult(
-                content=[
-                    TextContent(
-                        text="Chart generation not yet implemented. This will be implemented in subsequent PRs."
-                    )
-                ],
+            # Call Coordinator to process the visualization request
+            visualization_result = self.coordinator.process(validated_request)
+
+            # Convert visualization result to MCP tool call result
+            if visualization_result.error:
+                # Return error result
+                error_result = ToolCallResult(
+                    content=[TextContent(text=visualization_result.error["message"])],
+                    structuredContent={
+                        "error": visualization_result.error,
+                        "metadata": visualization_result.metadata,
+                    },
+                    isError=True,
+                )
+                return error_result.model_dump(by_alias=True)
+            # Return success result (will be implemented when pipeline is complete)
+            success_result = ToolCallResult(
+                content=[TextContent(text="Visualization generated successfully")],
                 structuredContent={
-                    "metadata": {
-                        "status": "not_implemented",
-                        "message": "Coordinator integration pending (PR-C3)",
-                        "validated_data_format": validated_request.data_format,
-                    }
+                    "format": visualization_result.format,
+                    "image": visualization_result.image_data,
+                    "metadata": visualization_result.metadata,
                 },
-                isError=True,
+                isError=False,
             )
-            return placeholder_result.model_dump(by_alias=True)
+            return success_result.model_dump(by_alias=True)
         except ChartelierError as e:
             # Chartelier-specific error (for future use)
             logger.error("Chartelier error: %s", e)  # noqa: TRY400

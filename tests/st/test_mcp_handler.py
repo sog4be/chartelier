@@ -94,8 +94,8 @@ class TestMCPHandler:
         assert "query" in tool["inputSchema"]["properties"]
         assert "options" in tool["inputSchema"]["properties"]
 
-    def test_tools_call_not_implemented(self) -> None:
-        """Test handling of tools/call request (not yet implemented)."""
+    def test_tools_call_with_coordinator(self) -> None:
+        """Test handling of tools/call request with Coordinator integration."""
         handler = MCPHandler()
 
         # Create tools/call request
@@ -124,12 +124,18 @@ class TestMCPHandler:
         assert response.error is None
         assert response.result is not None
 
-        # Should return error result for now (not implemented)
+        # Should return error result from Coordinator (not implemented yet)
         result = response.result
         assert result["isError"] is True
         assert len(result["content"]) > 0
         assert result["content"][0]["type"] == "text"
         assert "not yet implemented" in result["content"][0]["text"]
+
+        # Verify structured content contains error and metadata
+        assert "structuredContent" in result
+        assert "error" in result["structuredContent"]
+        assert "metadata" in result["structuredContent"]
+        assert result["structuredContent"]["error"]["code"] == "E500_INTERNAL"
 
     def test_unknown_tool_call(self) -> None:
         """Test handling of unknown tool call."""
@@ -258,6 +264,88 @@ class TestMCPHandler:
         result = response.result
         assert result["isError"] is True
         assert "Invalid parameters" in result["content"][0]["text"]
+
+    def test_tools_call_with_validation_error(self) -> None:
+        """Test handling of tools/call with invalid data."""
+        handler = MCPHandler()
+
+        # Create tools/call request with missing data field
+        request = JSONRPCRequest(
+            id=8,
+            method=MCPMethod.TOOLS_CALL,
+            params={
+                "name": "chartelier_visualize",
+                "arguments": {
+                    # Missing 'data' field
+                    "query": "Show a chart",
+                },
+            },
+        )
+
+        # Handle request
+        response_str = handler.handle_message(json.dumps(request.model_dump()))
+        assert response_str is not None
+
+        # Parse response
+        response_data = json.loads(response_str)
+        response = JSONRPCResponse(**response_data)
+
+        # Verify error response
+        assert response.id == 8
+        assert response.error is None
+        assert response.result is not None
+
+        result = response.result
+        assert result["isError"] is True
+        assert "Validation error" in result["content"][0]["text"]
+        assert "structuredContent" in result
+        assert "error" in result["structuredContent"]
+        assert result["structuredContent"]["error"]["code"] == "E400_VALIDATION"
+
+    def test_tools_call_with_different_formats(self) -> None:
+        """Test tools/call with different output formats."""
+        handler = MCPHandler()
+
+        # Test with SVG format
+        request_svg = JSONRPCRequest(
+            id=9,
+            method=MCPMethod.TOOLS_CALL,
+            params={
+                "name": "chartelier_visualize",
+                "arguments": {
+                    "data": "x,y\n1,2",
+                    "query": "Create chart",
+                    "options": {"format": "svg"},
+                },
+            },
+        )
+
+        response_str = handler.handle_message(json.dumps(request_svg.model_dump()))
+        response_data = json.loads(response_str)
+        response = JSONRPCResponse(**response_data)
+
+        # Should still return error but with SVG format in metadata
+        assert response.result["structuredContent"]["metadata"] is not None
+
+        # Test with PNG format (explicit)
+        request_png = JSONRPCRequest(
+            id=10,
+            method=MCPMethod.TOOLS_CALL,
+            params={
+                "name": "chartelier_visualize",
+                "arguments": {
+                    "data": "x,y\n1,2",
+                    "query": "Create chart",
+                    "options": {"format": "png"},
+                },
+            },
+        )
+
+        response_str = handler.handle_message(json.dumps(request_png.model_dump()))
+        response_data = json.loads(response_str)
+        response = JSONRPCResponse(**response_data)
+
+        assert response.result["structuredContent"]["metadata"] is not None
 
     def test_request_counting(self) -> None:
         """Test that requests are counted correctly."""
