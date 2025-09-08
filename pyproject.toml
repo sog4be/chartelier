@@ -133,6 +133,7 @@ module = [
     "mcp.*",
     "litellm.*",
     "polars.*",
+    "pydantic_settings.*",
 ]
 ignore_missing_imports = true
 
