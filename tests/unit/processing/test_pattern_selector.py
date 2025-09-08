@@ -196,8 +196,8 @@ class TestPatternSelector:
         assert result.reasoning is None
         assert result.confidence is None
 
-    def test_prompt_building(self) -> None:
-        """Test prompt building with various metadata configurations."""
+    def test_data_info_formatting(self) -> None:
+        """Test data info formatting with various metadata configurations."""
         selector = PatternSelector(llm_client=MockLLMClient())
 
         # Test with minimal metadata
@@ -211,12 +211,12 @@ class TestPatternSelector:
             sampled=False,
         )
 
-        # Test the _build_prompt method (accessing for test purposes)
+        # Test the _format_data_info method (accessing for test purposes)
         # This is acceptable for testing internal behavior
-        prompt = selector._build_prompt(metadata, "Test query")  # noqa: SLF001
-        assert "Rows: 10" in prompt
-        assert "Columns: 2" in prompt
-        assert "datetime" not in prompt.lower() or "Contains datetime" not in prompt
+        data_info = selector._format_data_info(metadata)  # noqa: SLF001
+        assert "Rows: 10" in data_info
+        assert "Columns: 2" in data_info
+        assert "datetime" not in data_info.lower() or "Contains datetime" not in data_info
 
         # Test with many columns (should truncate)
         many_cols = {f"col{i}": "float" for i in range(20)}
@@ -231,8 +231,8 @@ class TestPatternSelector:
             original_rows=5000,
         )
 
-        # Test the _build_prompt method (accessing for test purposes)
-        prompt = selector._build_prompt(metadata, "Test query")  # noqa: SLF001
-        assert "and 10 more columns" in prompt
-        assert "Contains datetime" in prompt
-        assert "Contains categorical" in prompt
+        # Test the _format_data_info method (accessing for test purposes)
+        data_info = selector._format_data_info(metadata)  # noqa: SLF001
+        assert "and 10 more columns" in data_info
+        assert "Contains datetime" in data_info
+        assert "Contains categorical" in data_info

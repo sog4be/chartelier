@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -11,12 +12,12 @@ from chartelier.core.errors import ChartelierError
 from chartelier.core.models import DataMetadata, ErrorDetail
 from chartelier.infra.llm_client import (
     LLMClient,
-    LLMMessage,
     LLMTimeoutError,
     ResponseFormat,
     get_llm_client,
 )
 from chartelier.infra.logging import get_logger
+from chartelier.infra.prompt_template import PromptTemplate
 
 logger = get_logger(__name__)
 
@@ -107,6 +108,9 @@ class PatternSelector:
         self.llm_client = llm_client or get_llm_client()
         self.logger = get_logger(self.__class__.__name__)
 
+        # Load prompt template with version
+        self.prompt_template = PromptTemplate.from_component(Path(__file__).parent, "v0.1.0")
+
     def select(self, metadata: DataMetadata, query: str) -> PatternSelection:
         """Select a visualization pattern based on data and query.
 
@@ -131,12 +135,16 @@ class PatternSelector:
         )
 
         try:
-            # Build and send prompt
-            prompt = self._build_prompt(metadata, query)
-            messages = [
-                LLMMessage(role="system", content="You are a data visualization expert."),
-                LLMMessage(role="user", content=prompt),
-            ]
+            # Prepare template variables
+            data_info = self._format_data_info(metadata)
+
+            # Render prompt using template
+            messages = self.prompt_template.render(
+                query=query,
+                data_info=data_info,
+                pattern_definitions=self.PATTERN_DEFINITIONS,
+                few_shot_examples=self.FEW_SHOT_EXAMPLES,
+            )
 
             response = self.llm_client.complete(
                 messages=messages,
@@ -174,45 +182,6 @@ class PatternSelector:
                 reason=f"Unexpected error: {e}",
                 hint="An unexpected error occurred. Please try again.",
             ) from e
-
-    def _build_prompt(self, metadata: DataMetadata, query: str) -> str:
-        """Build the prompt for LLM pattern classification.
-
-        Args:
-            metadata: Data metadata
-            query: User query
-
-        Returns:
-            Formatted prompt string
-        """
-        # Prepare data characteristics
-        data_info = self._format_data_info(metadata)
-
-        return f"""
-{self.PATTERN_DEFINITIONS}
-
-{self.FEW_SHOT_EXAMPLES}
-
-Task: Select the most appropriate visualization pattern for the following:
-
-User Query: "{query}"
-
-Data Characteristics:
-{data_info}
-
-Instructions:
-1. Analyze the user's intent from the query
-2. Consider the data characteristics
-3. Select exactly ONE pattern from P01, P02, P03, P12, P13, P21, P23, P31, P32
-4. Provide your reasoning
-
-Respond in JSON format:
-{{
-    "pattern_id": "P01",  // One of: P01, P02, P03, P12, P13, P21, P23, P31, P32
-    "reasoning": "Brief explanation of why this pattern fits",
-    "confidence": 0.95  // Confidence score between 0 and 1
-}}
-"""
 
     def _format_data_info(self, metadata: DataMetadata) -> str:
         """Format data metadata into readable description.

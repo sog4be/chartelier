@@ -1,0 +1,40 @@
+version = "v0.1.0"
+
+[[messages]]
+role = "system"
+content = """
+You are a data visualization expert specializing in pattern classification.
+Your task is to analyze user queries and data characteristics to select
+the most appropriate visualization pattern from a predefined 3x3 matrix.
+Focus on understanding the user's intent and matching it with data capabilities.
+"""
+do_strip = true
+
+[[messages]]
+role = "user"
+content = """
+{{ pattern_definitions }}
+
+{{ few_shot_examples }}
+
+Task: Select the most appropriate visualization pattern for the following:
+
+User Query: "{{ query }}"
+
+Data Characteristics:
+{{ data_info }}
+
+Instructions:
+1. Analyze the user's intent from the query
+2. Consider the data characteristics
+3. Select exactly ONE pattern from P01, P02, P03, P12, P13, P21, P23, P31, P32
+4. Provide your reasoning
+
+Respond in JSON format:
+{
+    "pattern_id": "P01",  // One of: P01, P02, P03, P12, P13, P21, P23, P31, P32
+    "reasoning": "Brief explanation of why this pattern fits",
+    "confidence": 0.95  // Confidence score between 0 and 1
+}
+"""
+do_strip = true
