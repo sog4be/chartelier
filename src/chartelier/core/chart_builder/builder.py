@@ -177,7 +177,7 @@ class ChartBuilder:
         self,
         chart: alt.Chart | alt.LayerChart,
         format: OutputFormat = OutputFormat.PNG,  # noqa: A002 — OutputFormat enum parameter
-        dpi: int = 96,
+        dpi: int = 300,
     ) -> str:
         """Export chart to specified format.
 
@@ -275,7 +275,7 @@ class ChartBuilder:
         self,
         chart: alt.Chart | alt.LayerChart,
         preferred_format: OutputFormat = OutputFormat.PNG,
-        dpi: int = 96,
+        dpi: int = 300,
     ) -> tuple[str, OutputFormat, bool]:
         """Export chart with automatic fallback.
 

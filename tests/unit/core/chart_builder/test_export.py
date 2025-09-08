@@ -60,7 +60,7 @@ class TestChartExport:
             test_png_data = b"fake_png_data"
             mock_png.return_value = test_png_data
 
-            result = builder.export(sample_chart, OutputFormat.PNG, dpi=96)
+            result = builder.export(sample_chart, OutputFormat.PNG, dpi=300)
 
             expected = base64.b64encode(test_png_data).decode("utf-8")
             assert result == expected
@@ -100,7 +100,7 @@ class TestChartExport:
             output, format, fallback_applied = builder.export_with_fallback(
                 sample_chart,
                 OutputFormat.PNG,
-                dpi=96,
+                dpi=300,
             )
 
             expected = base64.b64encode(test_png_data).decode("utf-8")
