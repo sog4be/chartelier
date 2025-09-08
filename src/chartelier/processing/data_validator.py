@@ -229,33 +229,87 @@ class DataValidator:
     def _apply_deterministic_sampling(self, dataframe: pl.DataFrame) -> pl.DataFrame:
         """Apply deterministic equidistant sampling to reduce data size.
 
+        This method ensures:
+        1. Deterministic results for the same input
+        2. First and last rows are always included
+        3. Evenly distributed sampling across the dataset
+
         Args:
             dataframe: Input DataFrame.
 
         Returns:
             Sampled DataFrame.
         """
-        max_rows = int(self.constraints["max_rows"])
-        max_cells = int(self.constraints["max_cells"])
-        target_rows = min(
-            max_rows,
-            max_cells // len(dataframe.columns),
-        )
+        target_rows = self._calculate_target_rows(dataframe)
 
+        # Handle edge cases early
         if len(dataframe) <= target_rows:
             return dataframe
+        if target_rows <= 0:
+            logger.warning("Target rows is 0 or negative, returning empty DataFrame")
+            return dataframe.head(0)
+        if target_rows == 1:
+            return dataframe.head(1)
 
-        # Add row index for deterministic sampling
+        # Calculate and apply sampling indices
+        indices = self._calculate_sampling_indices(len(dataframe), target_rows)
+        return self._apply_sampling_indices(dataframe, indices)
+
+    def _calculate_target_rows(self, dataframe: pl.DataFrame) -> int:
+        """Calculate the target number of rows after sampling."""
+        max_rows = int(self.constraints["max_rows"])
+        max_cells = int(self.constraints["max_cells"])
+
+        return min(
+            max_rows,
+            max_cells // max(1, len(dataframe.columns)),
+        )
+
+    def _calculate_sampling_indices(self, total_rows: int, target_rows: int) -> list[int]:
+        """Calculate deterministic sampling indices."""
+        if target_rows <= 0 or total_rows <= 0:
+            return []
+
+        # Always include first and last
+        indices = [0]
+
+        # Add intermediate rows with even distribution
+        if target_rows > 2:
+            step = (total_rows - 1) / (target_rows - 1)
+            for i in range(1, target_rows - 1):
+                index = round(i * step)
+                if index not in indices:
+                    indices.append(index)
+
+        # Always include last row if target_rows > 1
+        last_index = total_rows - 1
+        if target_rows > 1 and last_index not in indices:
+            indices.append(last_index)
+
+        # Ensure we don't exceed target_rows (handle rounding edge cases)
+        if len(indices) > target_rows:
+            indices = self._trim_indices(indices, target_rows)
+
+        return sorted(indices)
+
+    def _trim_indices(self, indices: list[int], target_rows: int) -> list[int]:
+        """Trim indices list to target_rows while keeping first and last."""
+        if target_rows <= 2:
+            return indices[:target_rows]
+
+        middle_count = target_rows - 2
+        if middle_count <= 0:
+            return [indices[0], indices[-1]][:target_rows]
+
+        middle_indices = indices[1:-1]
+        step = len(middle_indices) / middle_count
+        selected_middle = [middle_indices[round(i * step)] for i in range(middle_count)]
+        return [indices[0], *selected_middle, indices[-1]]
+
+    def _apply_sampling_indices(self, dataframe: pl.DataFrame, indices: list[int]) -> pl.DataFrame:
+        """Apply sampling indices to dataframe."""
         df_with_index = dataframe.with_row_index("_row_idx")
-
-        # Calculate step size for equidistant sampling
-        step = len(dataframe) / target_rows
-
-        # Select rows at regular intervals
-        indices = [int(i * step) for i in range(target_rows)]
         sampled = df_with_index.filter(pl.col("_row_idx").is_in(indices))
-
-        # Remove the temporary index column
         return sampled.drop("_row_idx")
 
     def _generate_metadata(

@@ -263,6 +263,129 @@ class TestDataValidator:
         ids = sampled["id"].to_list()
         # First and last should be included
         assert ids[0] == 0
+        assert ids[-1] == 99
         # Check roughly equidistant
         for i in range(1, len(ids)):
             assert ids[i] > ids[i - 1]
+
+    def test_sampling_edge_cases(self, validator):
+        """Test edge cases in deterministic sampling."""
+        # Test empty DataFrame
+        empty_df = pl.DataFrame({"col": []})
+        sampled = validator._apply_deterministic_sampling(empty_df)  # noqa: SLF001
+        assert len(sampled) == 0
+
+        # Test single row
+        single_df = pl.DataFrame({"col": [1]})
+        sampled = validator._apply_deterministic_sampling(single_df)  # noqa: SLF001
+        assert len(sampled) == 1
+        assert sampled["col"].to_list() == [1]
+
+        # Test two rows with target of 1
+        two_df = pl.DataFrame({"col": [1, 2]})
+        validator.constraints["max_rows"] = 1
+        sampled = validator._apply_deterministic_sampling(two_df)  # noqa: SLF001
+        assert len(sampled) == 1
+        assert sampled["col"].to_list() == [1]  # Should return first row
+
+        # Test two rows with target of 2
+        validator.constraints["max_rows"] = 2
+        sampled = validator._apply_deterministic_sampling(two_df)  # noqa: SLF001
+        assert len(sampled) == 2
+        assert sampled["col"].to_list() == [1, 2]
+
+        # Test exact match of rows to target
+        validator.constraints["max_rows"] = 5
+        exact_df = pl.DataFrame({"col": range(5)})
+        sampled = validator._apply_deterministic_sampling(exact_df)  # noqa: SLF001
+        assert len(sampled) == 5
+        assert sampled["col"].to_list() == list(range(5))
+
+    def test_sampling_preserves_first_and_last(self, validator):
+        """Test that sampling always includes first and last rows."""
+        for size in [10, 50, 100, 1000]:
+            test_df = pl.DataFrame({"id": range(size), "value": [f"val_{i}" for i in range(size)]})
+
+            for target in [2, 5, 10, 20]:
+                if target >= size:
+                    continue
+
+                validator.constraints["max_rows"] = target
+                sampled = validator._apply_deterministic_sampling(test_df)  # noqa: SLF001
+
+                ids = sampled["id"].to_list()
+                # First and last rows must be included
+                assert ids[0] == 0, f"First row missing for size={size}, target={target}"
+                assert ids[-1] == size - 1, f"Last row missing for size={size}, target={target}"
+                # Check ascending order
+                assert ids == sorted(ids), f"Rows not in order for size={size}, target={target}"
+
+    def test_sampling_distribution(self, validator):
+        """Test that sampled rows are evenly distributed."""
+        test_df = pl.DataFrame({"id": range(1000)})
+        validator.constraints["max_rows"] = 10
+
+        sampled = validator._apply_deterministic_sampling(test_df)  # noqa: SLF001
+        ids = sampled["id"].to_list()
+
+        # Check that the gaps between samples are roughly equal
+        gaps = [ids[i] - ids[i - 1] for i in range(1, len(ids))]
+        avg_gap = sum(gaps) / len(gaps)
+
+        # All gaps should be within 50% of average (allowing for rounding)
+        for gap in gaps:
+            assert 0.5 * avg_gap <= gap <= 1.5 * avg_gap, f"Uneven distribution: gap={gap}, avg={avg_gap}"
+
+    def test_sampling_with_multiple_columns(self, validator):
+        """Test sampling with multiple columns and cell limit."""
+        # Create DataFrame with 50 columns and 1000 rows (50,000 cells)
+        data = {f"col_{i}": range(1000) for i in range(50)}
+        test_df = pl.DataFrame(data)
+
+        # Set max_cells to 10,000 (should result in 200 rows max)
+        validator.constraints["max_cells"] = 10_000
+        validator.constraints["max_rows"] = 500  # Higher than cell limit allows
+
+        sampled = validator._apply_deterministic_sampling(test_df)  # noqa: SLF001
+
+        # Should be limited by max_cells / columns = 10,000 / 50 = 200
+        assert len(sampled) <= 200
+        assert len(sampled.columns) == 50  # All columns preserved
+
+        # Verify first and last rows
+        assert sampled["col_0"].to_list()[0] == 0
+        assert sampled["col_0"].to_list()[-1] == 999
+
+    def test_deterministic_sampling_consistency(self, validator):
+        """Test that sampling produces consistent results across multiple runs."""
+        # Create various test DataFrames
+        test_cases = [
+            (100, 10),  # 100 rows, sample 10
+            (1000, 50),  # 1000 rows, sample 50
+            (10000, 100),  # 10000 rows, sample 100
+            (57, 13),  # Prime numbers for edge case
+        ]
+
+        for total_rows, target_rows in test_cases:
+            test_df = pl.DataFrame(
+                {
+                    "id": range(total_rows),
+                    "value": [f"v_{i}" for i in range(total_rows)],
+                    "number": [i * 2.5 for i in range(total_rows)],
+                }
+            )
+
+            validator.constraints["max_rows"] = target_rows
+
+            # Run sampling multiple times
+            results = []
+            for _ in range(5):
+                sampled = validator._apply_deterministic_sampling(test_df)  # noqa: SLF001
+                results.append(sampled["id"].to_list())
+
+            # All results should be identical
+            first_result = results[0]
+            for i, result in enumerate(results[1:], 1):
+                assert result == first_result, (
+                    f"Inconsistent sampling for rows={total_rows}, target={target_rows}, iteration={i}"
+                )
