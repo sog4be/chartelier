@@ -386,6 +386,6 @@ class TestDataValidator:
             # All results should be identical
             first_result = results[0]
             for i, result in enumerate(results[1:], 1):
-                assert (
-                    result == first_result
-                ), f"Inconsistent sampling for rows={total_rows}, target={target_rows}, iteration={i}"
+                assert result == first_result, (
+                    f"Inconsistent sampling for rows={total_rows}, target={target_rows}, iteration={i}"
+                )
