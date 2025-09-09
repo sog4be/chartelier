@@ -192,7 +192,9 @@ class ChartBuilder:
                 if aux_elements:
                     chart = template.apply_auxiliary(chart, aux_elements, data, mapping)  # type: ignore[assignment]
 
-            return chart  # noqa: TRY300 — Chart needs to be returned when successful
+            # Apply unified visual theme at the top level
+            from .theme import apply_theme  # noqa: PLC0415 — Lazy import to avoid import cycles
+            return apply_theme(chart)  # noqa: TRY300 — Return themed chart on success
 
         except Exception as e:
             msg = f"Failed to build chart: {e}"
