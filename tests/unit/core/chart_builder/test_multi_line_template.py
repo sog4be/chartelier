@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 import pytest
 
-from chartelier.core.chart_builder.templates.multi_line import MultiLineTemplate
+from chartelier.core.chart_builder.templates.p12.multi_line import MultiLineTemplate
 from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 

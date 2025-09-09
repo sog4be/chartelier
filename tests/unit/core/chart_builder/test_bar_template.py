@@ -4,7 +4,7 @@ import altair as alt
 import polars as pl
 import pytest
 
-from chartelier.core.chart_builder.templates.bar import BarTemplate
+from chartelier.core.chart_builder.templates.p02.bar import BarTemplate
 from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 

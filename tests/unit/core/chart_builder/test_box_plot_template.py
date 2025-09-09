@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 import pytest
 
-from chartelier.core.chart_builder.templates.box_plot import BoxPlotTemplate
+from chartelier.core.chart_builder.templates.p32.box_plot import BoxPlotTemplate
 from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 
