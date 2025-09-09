@@ -43,23 +43,15 @@ class ChartBuilder:
     def _initialize_templates(self) -> None:
         """Initialize and register available templates."""
         # Import and register implemented templates
-        from .templates.bar import BarTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.box_plot import BoxPlotTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.facet_histogram import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+        from .templates import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+            BarTemplate,
+            BoxPlotTemplate,
             FacetHistogramTemplate,
-        )
-        from .templates.grouped_bar import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
             GroupedBarTemplate,
-        )
-        from .templates.histogram import HistogramTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.line import LineTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.multi_line import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+            HistogramTemplate,
+            LineTemplate,
             MultiLineTemplate,
-        )
-        from .templates.overlay_histogram import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
             OverlayHistogramTemplate,
-        )
-        from .templates.small_multiples import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
             SmallMultiplesTemplate,
         )
 
