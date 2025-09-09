@@ -86,19 +86,26 @@ class OverlayHistogramTemplate(BaseTemplate):
                 # For categorical data, use as-is
                 encodings["x"] = alt.X(f"{mapping.x}:N", title=mapping.x)
 
-        # Y-axis is always count for histogram
-        encodings["y"] = alt.Y(
-            "count()",
-            title="Frequency",
-            scale=alt.Scale(zero=True),  # Histograms must start at zero
-        )
-
         # Required color encoding for category comparison
         if mapping.color:
             encodings["color"] = alt.Color(
                 f"{mapping.color}:N",
                 title=mapping.color,
                 scale=alt.Scale(scheme="category10"),  # Use consistent color scheme
+            )
+            # Y-axis with stack=None for overlay effect (not stacked)
+            encodings["y"] = alt.Y(
+                "count()",
+                title="Frequency",
+                scale=alt.Scale(zero=True),  # Histograms must start at zero
+                stack=None,  # This prevents stacking - creates overlay effect
+            )
+        else:
+            # Y-axis is always count for histogram (default case)
+            encodings["y"] = alt.Y(
+                "count()",
+                title="Frequency",
+                scale=alt.Scale(zero=True),  # Histograms must start at zero
             )
 
         # Apply encodings
