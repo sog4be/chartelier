@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 import pytest
 
-from chartelier.core.chart_builder.templates.histogram import HistogramTemplate
+from chartelier.core.chart_builder.templates.p03.histogram import HistogramTemplate
 from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 

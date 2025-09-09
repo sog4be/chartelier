@@ -43,14 +43,30 @@ class ChartBuilder:
     def _initialize_templates(self) -> None:
         """Initialize and register available templates."""
         # Import and register implemented templates
-        from .templates.bar import BarTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.histogram import HistogramTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
-        from .templates.line import LineTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+        from .templates import (  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+            BarTemplate,
+            BoxPlotTemplate,
+            FacetHistogramTemplate,
+            GroupedBarTemplate,
+            HistogramTemplate,
+            LineTemplate,
+            MultiLineTemplate,
+            OverlayHistogramTemplate,
+            SmallMultiplesTemplate,
+        )
 
-        # Register templates
+        # Register basic templates (P01-P03)
         self.register_template("P01_line", LineTemplate())
         self.register_template("P02_bar", BarTemplate())
         self.register_template("P03_histogram", HistogramTemplate())
+
+        # Register advanced templates (P12, P13, P21, P23, P31, P32)
+        self.register_template("P12_multi_line", MultiLineTemplate())
+        self.register_template("P13_facet_histogram", FacetHistogramTemplate())
+        self.register_template("P21_grouped_bar", GroupedBarTemplate())
+        self.register_template("P23_overlay_histogram", OverlayHistogramTemplate())
+        self.register_template("P31_small_multiples", SmallMultiplesTemplate())
+        self.register_template("P32_box_plot", BoxPlotTemplate())
 
         # Set up pattern defaults
         self._pattern_defaults = {

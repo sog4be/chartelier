@@ -28,7 +28,6 @@ class LineTemplate(BaseTemplate):
             allowed_auxiliary=[
                 AuxiliaryElement.MEAN_LINE,
                 AuxiliaryElement.MEDIAN_LINE,
-                AuxiliaryElement.REGRESSION,
                 AuxiliaryElement.MOVING_AVG,
                 AuxiliaryElement.TARGET_LINE,
                 AuxiliaryElement.THRESHOLD,
