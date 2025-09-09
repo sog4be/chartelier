@@ -182,21 +182,29 @@ class BaseTemplate(ABC):
 
         elif element == AuxiliaryElement.THRESHOLD and mapping.y:
             # Create threshold bands (e.g., mean ± 1 std dev)
-            mean_val = data[mapping.y].mean()
-            std_val = data[mapping.y].std()
-            if mean_val is not None and std_val is not None:
-                upper_threshold = mean_val + std_val
-                lower_threshold = mean_val - std_val
+            y_col = data[mapping.y]
+            # Only apply threshold to numeric data
+            if y_col.dtype.is_numeric():
+                mean_val = y_col.mean()
+                std_val = y_col.std()
+                if (
+                    mean_val is not None
+                    and std_val is not None
+                    and isinstance(mean_val, (int, float))
+                    and isinstance(std_val, (int, float))
+                ):
+                    upper_threshold = float(mean_val) + float(std_val)
+                    lower_threshold = float(mean_val) - float(std_val)
 
-                # Create threshold area
-                threshold_data = pl.DataFrame({"lower": [lower_threshold], "upper": [upper_threshold]})
+                    # Create threshold area
+                    threshold_data = pl.DataFrame({"lower": [lower_threshold], "upper": [upper_threshold]})
 
-                area = (
-                    alt.Chart(self.prepare_data_for_altair(threshold_data))
-                    .mark_rect(opacity=0.2, color="gray")
-                    .encode(y="lower:Q", y2="upper:Q")
-                )
-                return alt.layer(chart, area)
+                    area = (
+                        alt.Chart(self.prepare_data_for_altair(threshold_data))
+                        .mark_rect(opacity=0.2, color="gray")
+                        .encode(y="lower:Q", y2="upper:Q")
+                    )
+                    return alt.layer(chart, area)
 
         elif element == AuxiliaryElement.REGRESSION and mapping.x and mapping.y:
             # Create regression layer from base data
@@ -268,12 +276,12 @@ class BaseTemplate(ABC):
                             {
                                 mapping.x: max_point[mapping.x],
                                 mapping.y: max_point[mapping.y],
-                                "annotation": f"Max: {max_point[mapping.y]:.1f}",
+                                "annotation": f"Max: {float(max_point[mapping.y]):.1f}",
                             },
                             {
                                 mapping.x: min_point[mapping.x],
                                 mapping.y: min_point[mapping.y],
-                                "annotation": f"Min: {min_point[mapping.y]:.1f}",
+                                "annotation": f"Min: {float(min_point[mapping.y]):.1f}",
                             },
                         ]
                     )
@@ -308,32 +316,41 @@ class BaseTemplate(ABC):
             elif mapping.x:
                 # Histogram case: annotate x values (distribution characteristics)
                 x_col = data[mapping.x]
-                mean_val = x_col.mean()
-                std_val = x_col.std()
+                # Only apply annotations to numeric data
+                if x_col.dtype.is_numeric():
+                    mean_val = x_col.mean()
+                    std_val = x_col.std()
 
-                if mean_val is not None and std_val is not None:
-                    # Create annotations for mean and std dev
-                    annotation_data = pl.DataFrame(
-                        [
-                            {
-                                mapping.x: mean_val,
-                                "annotation": f"Mean: {mean_val:.1f}",
-                                "y_pos": 30,  # Fixed y position for histogram
-                            },
-                            {
-                                mapping.x: mean_val + std_val,
-                                "annotation": f"+1SD: {mean_val + std_val:.1f}",
-                                "y_pos": 20,
-                            },
-                        ]
-                    )
+                    if (
+                        mean_val is not None
+                        and std_val is not None
+                        and isinstance(mean_val, (int, float))
+                        and isinstance(std_val, (int, float))
+                    ):
+                        mean_float = float(mean_val)
+                        std_float = float(std_val)
+                        # Create annotations for mean and std dev
+                        annotation_data = pl.DataFrame(
+                            [
+                                {
+                                    mapping.x: mean_float,
+                                    "annotation": f"Mean: {mean_float:.1f}",
+                                    "y_pos": 30,  # Fixed y position for histogram
+                                },
+                                {
+                                    mapping.x: mean_float + std_float,
+                                    "annotation": f"+1SD: {(mean_float + std_float):.1f}",
+                                    "y_pos": 20,
+                                },
+                            ]
+                        )
 
-                    annotations = (
-                        alt.Chart(self.prepare_data_for_altair(annotation_data))
-                        .mark_text(align="center", dx=0, dy=-10, fontSize=10, color="black", fontWeight="bold")
-                        .encode(x=f"{mapping.x}:Q", y="y_pos:Q", text="annotation:N")
-                    )
-                    return alt.layer(chart, annotations)
+                        annotations = (
+                            alt.Chart(self.prepare_data_for_altair(annotation_data))
+                            .mark_text(align="center", dx=0, dy=-10, fontSize=10, color="black", fontWeight="bold")
+                            .encode(x=f"{mapping.x}:Q", y="y_pos:Q", text="annotation:N")
+                        )
+                        return alt.layer(chart, annotations)
 
         elif element == AuxiliaryElement.HIGHLIGHT:
             # Highlight specific data points (max/min values) with different colors and shapes
@@ -395,36 +412,45 @@ class BaseTemplate(ABC):
             elif mapping.x:
                 # Histogram case: highlight distribution characteristics
                 x_col = data[mapping.x]
-                mean_val = x_col.mean()
-                std_val = x_col.std()
+                # Only apply highlights to numeric data
+                if x_col.dtype.is_numeric():
+                    mean_val = x_col.mean()
+                    std_val = x_col.std()
 
-                if mean_val is not None and std_val is not None:
-                    # Highlight mean and standard deviation points
-                    highlight_data = pl.DataFrame(
-                        [
-                            {
-                                mapping.x: mean_val,
-                                "point_type": "Mean",
-                                "y_pos": 25,  # Fixed y position
-                            },
-                            {mapping.x: mean_val + std_val, "point_type": "+1SD", "y_pos": 15},
-                        ]
-                    )
-
-                    highlights = (
-                        alt.Chart(self.prepare_data_for_altair(highlight_data))
-                        .mark_circle(size=80, stroke="white", strokeWidth=2)
-                        .encode(
-                            x=f"{mapping.x}:Q",
-                            y="y_pos:Q",
-                            color=alt.Color(
-                                "point_type:N",
-                                scale=alt.Scale(domain=["Mean", "+1SD"], range=["red", "orange"]),
-                                legend=alt.Legend(title="Distribution Points"),
-                            ),
+                    if (
+                        mean_val is not None
+                        and std_val is not None
+                        and isinstance(mean_val, (int, float))
+                        and isinstance(std_val, (int, float))
+                    ):
+                        mean_float = float(mean_val)
+                        std_float = float(std_val)
+                        # Highlight mean and standard deviation points
+                        highlight_data = pl.DataFrame(
+                            [
+                                {
+                                    mapping.x: mean_float,
+                                    "point_type": "Mean",
+                                    "y_pos": 25,  # Fixed y position
+                                },
+                                {mapping.x: mean_float + std_float, "point_type": "+1SD", "y_pos": 15},
+                            ]
                         )
-                    )
-                    return alt.layer(chart, highlights)
+
+                        highlights = (
+                            alt.Chart(self.prepare_data_for_altair(highlight_data))
+                            .mark_circle(size=80, stroke="white", strokeWidth=2)
+                            .encode(
+                                x=f"{mapping.x}:Q",
+                                y="y_pos:Q",
+                                color=alt.Color(
+                                    "point_type:N",
+                                    scale=alt.Scale(domain=["Mean", "+1SD"], range=["red", "orange"]),
+                                    legend=alt.Legend(title="Distribution Points"),
+                                ),
+                            )
+                        )
+                        return alt.layer(chart, highlights)
 
         return chart
 

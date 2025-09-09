@@ -110,7 +110,6 @@ class TestLineTemplate:
         # Should return a layer chart with horizontal mean line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-
     def test_multiple_auxiliary_elements(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test applying multiple auxiliary elements."""
         mapping = MappingConfig(x="x", y="y")

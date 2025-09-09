@@ -105,7 +105,6 @@ class TestMultiLineTemplate:
         # Should return a layer chart with mean lines per series
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-
     def test_allowed_auxiliary_elements(self, template: MultiLineTemplate) -> None:
         """Test that multi-line chart allows appropriate auxiliary elements."""
         spec = template.spec
