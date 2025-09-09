@@ -69,11 +69,23 @@ class LineTemplate(BaseTemplate):
 
         # Required encodings
         if mapping.x:
-            # Detect if x is temporal
+            # Detect if x is temporal or categorical
             if mapping.x in data.columns:
                 x_dtype = str(data[mapping.x].dtype)
+                # Check if column name suggests date/time
+                x_name_lower = mapping.x.lower()
+
+                # If it's actually a date/datetime type
                 if "date" in x_dtype.lower() or "time" in x_dtype.lower():
                     encodings["x"] = alt.X(f"{mapping.x}:T", title=mapping.x)
+                # If column name suggests date but it's stored as string
+                elif "date" in x_name_lower or "time" in x_name_lower:
+                    # Try to use as temporal - Altair will parse the string dates
+                    encodings["x"] = alt.X(f"{mapping.x}:T", title=mapping.x)
+                # If it's a string type (categorical)
+                elif x_dtype in {"String", "Utf8"}:
+                    encodings["x"] = alt.X(f"{mapping.x}:N", title=mapping.x)
+                # Default to quantitative for numeric types
                 else:
                     encodings["x"] = alt.X(f"{mapping.x}:Q", title=mapping.x)
             else:

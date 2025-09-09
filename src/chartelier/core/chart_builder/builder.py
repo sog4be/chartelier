@@ -42,8 +42,17 @@ class ChartBuilder:
 
     def _initialize_templates(self) -> None:
         """Initialize and register available templates."""
-        # Templates will be registered here as they are implemented
-        # For now, we'll set up the pattern defaults
+        # Import and register implemented templates
+        from .templates.bar import BarTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+        from .templates.histogram import HistogramTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+        from .templates.line import LineTemplate  # noqa: PLC0415 — Lazy import to avoid circular dependencies
+
+        # Register templates
+        self.register_template("P01_line", LineTemplate())
+        self.register_template("P02_bar", BarTemplate())
+        self.register_template("P03_histogram", HistogramTemplate())
+
+        # Set up pattern defaults
         self._pattern_defaults = {
             PatternID.P01: "P01_line",
             PatternID.P02: "P02_bar",
