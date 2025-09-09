@@ -96,6 +96,104 @@ class TestVisualOutput:
 
         return pl.DataFrame({"test_scores": scores})
 
+    @pytest.fixture
+    def multi_series_data(self):
+        """Create sample multi-series time data for P12."""
+        import datetime  # noqa: PLC0415
+        import random  # noqa: PLC0415
+
+        dates = pl.date_range(
+            datetime.date(2024, 1, 1),
+            datetime.date(2024, 2, 29),  # 2 months
+            interval="1d",
+            eager=True,
+        )
+
+        random.seed(42)
+        data = []
+        for i, date in enumerate(dates):
+            # Series A: increasing trend
+            value_a = 50 + i * 0.8 + random.gauss(0, 3)
+            data.append({"date": date.strftime("%Y-%m-%d"), "value": value_a, "series": "Revenue"})
+
+            # Series B: decreasing trend
+            value_b = 80 - i * 0.5 + random.gauss(0, 4)
+            data.append({"date": date.strftime("%Y-%m-%d"), "value": value_b, "series": "Cost"})
+
+            # Series C: stable with noise
+            value_c = 30 + random.gauss(0, 2)
+            data.append({"date": date.strftime("%Y-%m-%d"), "value": value_c, "series": "Profit"})
+
+        return pl.DataFrame(data)
+
+    @pytest.fixture
+    def grouped_data(self):
+        """Create sample grouped data for P21."""
+        import random  # noqa: PLC0415
+
+        random.seed(42)
+        data = []
+        quarters = ["Q1", "Q2", "Q3", "Q4"]
+        regions = ["North", "South", "East", "West"]
+
+        for quarter in quarters:
+            for region in regions:
+                # Different performance patterns per region
+                base = {"North": 100, "South": 85, "East": 95, "West": 75}[region]
+                growth = quarters.index(quarter) * 10
+                noise = random.gauss(0, 8)
+                value = base + growth + noise
+                data.append({"quarter": quarter, "region": region, "sales": value})
+
+        return pl.DataFrame(data)
+
+    @pytest.fixture
+    def category_distribution_data(self):
+        """Create sample data for P23 overlay histogram."""
+        import random  # noqa: PLC0415
+
+        random.seed(42)
+        data = []
+
+        # Group A: Normal distribution around 70
+        for _ in range(200):
+            data.append({"value": random.gauss(70, 12), "group": "Group A"})
+
+        # Group B: Normal distribution around 85
+        for _ in range(200):
+            data.append({"value": random.gauss(85, 10), "group": "Group B"})
+
+        # Group C: Normal distribution around 60
+        for _ in range(200):
+            data.append({"value": random.gauss(60, 15), "group": "Group C"})
+
+        return pl.DataFrame(data)
+
+    @pytest.fixture
+    def box_plot_data(self):
+        """Create sample data for P32 box plot."""
+        import random  # noqa: PLC0415
+
+        random.seed(42)
+        data = []
+        departments = ["Engineering", "Marketing", "Sales", "Support"]
+
+        # Different salary distributions per department
+        salary_params = {
+            "Engineering": (95000, 25000),  # mean, std
+            "Marketing": (75000, 18000),
+            "Sales": (65000, 20000),
+            "Support": (55000, 12000),
+        }
+
+        for dept in departments:
+            mean, std = salary_params[dept]
+            for _ in range(50):  # 50 employees per department
+                salary = max(30000, random.gauss(mean, std))  # Floor at 30k
+                data.append({"department": dept, "salary": salary})
+
+        return pl.DataFrame(data)
+
     @pytest.mark.skipif(
         os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
         reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
@@ -214,17 +312,189 @@ class TestVisualOutput:
         os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
         reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
     )
+    def test_p12_multi_line_chart(self, builder, multi_series_data, output_dir):
+        """Generate P12 multi-line chart for multiple time series comparison."""
+        mapping = MappingConfig(x="date", y="value", color="series")
+
+        # Build chart with regression lines per series
+        chart = builder.build(
+            template_id="P12_multi_line",
+            data=multi_series_data,
+            mapping=mapping,
+            auxiliary=["mean_line", "regression"],
+            width=1200,
+            height=600,
+        )
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P12_multi_line_chart.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P12_multi_line_chart.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P12 multi-line chart", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P12 multi-line chart", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
+    @pytest.mark.skipif(
+        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
+        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
+    )
+    def test_p21_grouped_bar_chart(self, builder, grouped_data, output_dir):
+        """Generate P21 grouped bar chart for category comparison over time."""
+        mapping = MappingConfig(x="quarter", y="sales", color="region")
+
+        # Build chart with mean line across all groups
+        chart = builder.build(
+            template_id="P21_grouped_bar",
+            data=grouped_data,
+            mapping=mapping,
+            auxiliary=["mean_line"],
+            width=1200,
+            height=600,
+        )
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P21_grouped_bar_chart.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P21_grouped_bar_chart.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P21 grouped bar chart", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P21 grouped bar chart", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
+    @pytest.mark.skipif(
+        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
+        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
+    )
+    def test_p23_overlay_histogram(self, builder, category_distribution_data, output_dir):
+        """Generate P23 overlay histogram for category-wise distribution comparison."""
+        mapping = MappingConfig(x="value", color="group")
+
+        # Build chart with mean lines per category
+        chart = builder.build(
+            template_id="P23_overlay_histogram",
+            data=category_distribution_data,
+            mapping=mapping,
+            auxiliary=["mean_line", "median_line"],
+            width=1200,
+            height=600,
+        )
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P23_overlay_histogram.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P23_overlay_histogram.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P23 overlay histogram", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P23 overlay histogram", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
+    @pytest.mark.skipif(
+        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
+        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
+    )
+    def test_p32_box_plot(self, builder, box_plot_data, output_dir):
+        """Generate P32 box plot for distribution comparison between categories."""
+        mapping = MappingConfig(x="department", y="salary")
+
+        # Build chart with overall mean line and target
+        chart = builder.build(
+            template_id="P32_box_plot",
+            data=box_plot_data,
+            mapping=mapping,
+            auxiliary=["mean_line", "target_line"],
+            width=1200,
+            height=600,
+        )
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P32_box_plot.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P32_box_plot.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P32 box plot", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P32 box plot", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
+    @pytest.mark.skipif(
+        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
+        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
+    )
     def test_all_templates_overview(self, builder, output_dir):
-        """Generate an overview showing all three template types."""
-        # Create a summary DataFrame for the test results
+        """Generate an overview showing all implemented template types."""
+        # Create a summary DataFrame for all test results
         summary_data = pl.DataFrame(
             {
-                "template": ["P01_line", "P02_bar", "P03_histogram"],
-                "pattern": ["Transition", "Difference", "Overview"],
+                "template": [
+                    "P01_line",
+                    "P02_bar",
+                    "P03_histogram",
+                    "P12_multi_line",
+                    "P21_grouped_bar",
+                    "P23_overlay_histogram",
+                    "P32_box_plot",
+                ],
+                "pattern": [
+                    "Transition",
+                    "Difference",
+                    "Overview",
+                    "Transition+Difference",
+                    "Difference+Transition",
+                    "Difference+Overview",
+                    "Overview+Difference",
+                ],
                 "description": [
                     "Time series with trend",
                     "Category comparison",
                     "Distribution analysis",
+                    "Multiple time series comparison",
+                    "Grouped category comparison over time",
+                    "Category-wise distribution comparison",
+                    "Statistical distribution comparison",
                 ],
             }
         )
@@ -254,15 +524,25 @@ def test_visual_output_instructions():
     3. Images will be saved in both SVG and PNG formats (if vl-convert is available)
 
     Generated files:
+    Basic Templates (P01-P03):
     - P01_line_chart.svg/png - Line chart showing time series with mean and median lines
     - P02_bar_chart.svg/png - Bar chart comparing categories with mean line
     - P03_histogram.svg/png - Histogram showing distribution with mean and median
-    - template_overview.csv - Summary of all templates
+
+    Advanced Templates (P12, P21, P23, P32):
+    - P12_multi_line_chart.svg/png - Multi-line chart with per-series regression lines
+    - P21_grouped_bar_chart.svg/png - Grouped bars showing quarterly regional performance
+    - P23_overlay_histogram.svg/png - Overlaid histograms with category-specific mean/median
+    - P32_box_plot.svg/png - Box plot comparing salary distributions by department
+
+    Reference:
+    - template_overview.csv - Summary of all 7 implemented templates
 
     Each chart demonstrates:
-    - The primary visualization pattern (Transition/Difference/Overview)
+    - The primary visualization pattern (Transition/Difference/Overview + combinations)
     - Auxiliary elements appropriate for that chart type
-    - Compliance with Visualization Policy (e.g., zero origin for bars)
+    - Compliance with Visualization Policy (e.g., zero origin for bars, consistent colors)
+    - Template-specific features (faceting, grouping, overlays, statistical summaries)
     """
     instructions = test_visual_output_instructions.__doc__
     logger.info("Visual test instructions", instructions=instructions)
