@@ -92,9 +92,10 @@ class GroupedBarTemplate(BaseTemplate):
                 scale=alt.Scale(scheme="category10"),  # Use consistent color scheme
             )
 
-        # Use column positioning for grouped bars
+        # Use x-offset for grouped bars instead of column faceting
+        # This allows auxiliary elements to be layered properly
         if mapping.x and mapping.color:
-            encodings["column"] = alt.Column(f"{mapping.color}:N", spacing=5)
+            encodings["xOffset"] = alt.XOffset(f"{mapping.color}:N")
 
         # Apply encodings
         chart = chart.encode(**encodings)
@@ -126,29 +127,21 @@ class GroupedBarTemplate(BaseTemplate):
         Returns:
             Modified chart
         """
-        # For grouped bars, mean/median lines should be computed per group
-        if element == AuxiliaryElement.MEAN_LINE and mapping.y and mapping.color:
-            # Calculate mean for each group
-            mean_data = data.group_by(mapping.color).agg(pl.col(mapping.y).mean().alias("mean_value"))
-
-            # Create horizontal mean lines for each group
-            rule = (
-                alt.Chart(self.prepare_data_for_altair(mean_data))
-                .mark_rule(
-                    strokeDash=[5, 5],
-                    strokeWidth=2,
+        # For grouped bars, use simple horizontal lines that work with layering
+        if element == AuxiliaryElement.MEAN_LINE and mapping.y:
+            # Calculate overall mean across all groups
+            overall_mean = data[mapping.y].mean()
+            if overall_mean is not None:
+                rule = (
+                    alt.Chart(pl.DataFrame({"mean": [overall_mean]}))
+                    .mark_rule(
+                        color="red",
+                        strokeDash=[5, 5],
+                        strokeWidth=2,
+                    )
+                    .encode(y="mean:Q", tooltip=alt.Tooltip("mean:Q", format=".2f", title="Overall Mean"))
                 )
-                .encode(
-                    y=alt.Y("mean_value:Q"),
-                    color=alt.Color(f"{mapping.color}:N", scale=alt.Scale(scheme="category10")),
-                    column=alt.Column(f"{mapping.color}:N"),
-                    tooltip=[
-                        alt.Tooltip(f"{mapping.color}:N", title="Group"),
-                        alt.Tooltip("mean_value:Q", format=".2f", title="Mean"),
-                    ],
-                )
-            )
-            return alt.layer(chart, rule)
+                return alt.layer(chart, rule)
 
         if element == AuxiliaryElement.TARGET_LINE and mapping.y:
             # For grouped bar charts, target line should be horizontal across all groups
