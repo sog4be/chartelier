@@ -119,7 +119,7 @@ class BaseTemplate(ABC):
 
         return chart
 
-    def _apply_single_auxiliary(
+    def _apply_single_auxiliary(  # noqa: PLR0911, PLR0912, PLR0915, C901
         self,
         chart: alt.Chart,
         element: AuxiliaryElement,
@@ -152,6 +152,52 @@ class BaseTemplate(ABC):
                 # Use alt.layer for proper composition
                 return alt.layer(chart, rule)
 
+        elif element == AuxiliaryElement.MEDIAN_LINE and mapping.y:
+            median_val = data[mapping.y].median()
+            if median_val is not None:
+                rule = (
+                    alt.Chart(pl.DataFrame({"median": [median_val]}))
+                    .mark_rule(
+                        color="orange",
+                        strokeDash=[3, 3],
+                    )
+                    .encode(y="median:Q")
+                )
+                return alt.layer(chart, rule)
+
+        elif element == AuxiliaryElement.TARGET_LINE and mapping.y:
+            # Use the 75th percentile as a target line example
+            target_val = data[mapping.y].quantile(0.75)
+            if target_val is not None:
+                rule = (
+                    alt.Chart(pl.DataFrame({"target": [target_val]}))
+                    .mark_rule(
+                        color="green",
+                        strokeDash=[8, 4],
+                        strokeWidth=2,
+                    )
+                    .encode(y="target:Q")
+                )
+                return alt.layer(chart, rule)
+
+        elif element == AuxiliaryElement.THRESHOLD and mapping.y:
+            # Create threshold bands (e.g., mean ± 1 std dev)
+            mean_val = data[mapping.y].mean()
+            std_val = data[mapping.y].std()
+            if mean_val is not None and std_val is not None:
+                upper_threshold = mean_val + std_val
+                lower_threshold = mean_val - std_val
+
+                # Create threshold area
+                threshold_data = pl.DataFrame({"lower": [lower_threshold], "upper": [upper_threshold]})
+
+                area = (
+                    alt.Chart(self.prepare_data_for_altair(threshold_data))
+                    .mark_rect(opacity=0.2, color="gray")
+                    .encode(y="lower:Q", y2="upper:Q")
+                )
+                return alt.layer(chart, area)
+
         elif element == AuxiliaryElement.REGRESSION and mapping.x and mapping.y:
             # Create regression layer from base data
             regression = (
@@ -171,6 +217,214 @@ class BaseTemplate(ABC):
             )
             # Use alt.layer for proper composition
             return alt.layer(chart, regression)
+
+        elif element == AuxiliaryElement.MOVING_AVG and mapping.x and mapping.y:
+            # Create a simple moving average using Altair's transform_window
+            # Determine proper x-axis encoding based on data type
+            x_col_data = data[mapping.x]
+            x_encoding = f"{mapping.x}:N"  # Default to nominal
+
+            # Check if x column contains dates or numeric values
+            if hasattr(x_col_data, "dtype"):
+                if "date" in str(x_col_data.dtype).lower() or "time" in str(x_col_data.dtype).lower():
+                    x_encoding = f"{mapping.x}:T"
+                elif x_col_data.dtype.is_numeric():
+                    x_encoding = f"{mapping.x}:Q"
+
+            moving_avg = (
+                alt.Chart(self.prepare_data_for_altair(data))
+                .transform_window(
+                    rolling_mean=f"mean({mapping.y})",
+                    frame=[-4, 0],  # 5-point moving average (current + 4 previous)
+                )
+                .mark_line(
+                    color="purple",
+                    strokeWidth=2,
+                    strokeDash=[2, 2],
+                )
+                .encode(x=x_encoding, y="rolling_mean:Q")
+            )
+            return alt.layer(chart, moving_avg)
+
+        elif element == AuxiliaryElement.ANNOTATION:
+            # Add annotations to highlight interesting data points
+            # For basic implementation, annotate the max and min values
+
+            # Determine which column to annotate based on mapping
+            if mapping.y:
+                # Standard case: annotate y values (bar charts, line charts)
+                y_col = data[mapping.y]
+                max_idx = y_col.arg_max()
+                min_idx = y_col.arg_min()
+
+                if max_idx is not None and min_idx is not None and mapping.x:
+                    # Get the actual data points for annotation
+                    max_point = data.row(max_idx, named=True)
+                    min_point = data.row(min_idx, named=True)
+
+                    # Create annotation data
+                    annotation_data = pl.DataFrame(
+                        [
+                            {
+                                mapping.x: max_point[mapping.x],
+                                mapping.y: max_point[mapping.y],
+                                "annotation": f"Max: {max_point[mapping.y]:.1f}",
+                            },
+                            {
+                                mapping.x: min_point[mapping.x],
+                                mapping.y: min_point[mapping.y],
+                                "annotation": f"Min: {min_point[mapping.y]:.1f}",
+                            },
+                        ]
+                    )
+
+                    # Determine proper x-axis encoding based on data type
+                    x_col_data = data[mapping.x]
+                    x_encoding = f"{mapping.x}:N"  # Default to nominal for categorical data
+
+                    # Check if x column contains dates or numeric values
+                    if hasattr(x_col_data, "dtype"):
+                        dtype_str = str(x_col_data.dtype).lower()
+                        if "date" in dtype_str or "time" in dtype_str:
+                            x_encoding = f"{mapping.x}:T"
+                        elif hasattr(x_col_data.dtype, "is_numeric") and x_col_data.dtype.is_numeric():
+                            x_encoding = f"{mapping.x}:Q"
+                        # For string/categorical data, keep :N (nominal)
+
+                    annotations = (
+                        alt.Chart(self.prepare_data_for_altair(annotation_data))
+                        .mark_text(
+                            align="center",  # Center for better readability on bars
+                            dx=0,
+                            dy=-10,  # Position above the bar
+                            fontSize=12,
+                            color="black",
+                            fontWeight="bold",
+                        )
+                        .encode(x=x_encoding, y=f"{mapping.y}:Q", text="annotation:N")
+                    )
+                    return alt.layer(chart, annotations)
+
+            elif mapping.x:
+                # Histogram case: annotate x values (distribution characteristics)
+                x_col = data[mapping.x]
+                mean_val = x_col.mean()
+                std_val = x_col.std()
+
+                if mean_val is not None and std_val is not None:
+                    # Create annotations for mean and std dev
+                    annotation_data = pl.DataFrame(
+                        [
+                            {
+                                mapping.x: mean_val,
+                                "annotation": f"Mean: {mean_val:.1f}",
+                                "y_pos": 30,  # Fixed y position for histogram
+                            },
+                            {
+                                mapping.x: mean_val + std_val,
+                                "annotation": f"+1SD: {mean_val + std_val:.1f}",
+                                "y_pos": 20,
+                            },
+                        ]
+                    )
+
+                    annotations = (
+                        alt.Chart(self.prepare_data_for_altair(annotation_data))
+                        .mark_text(align="center", dx=0, dy=-10, fontSize=10, color="black", fontWeight="bold")
+                        .encode(x=f"{mapping.x}:Q", y="y_pos:Q", text="annotation:N")
+                    )
+                    return alt.layer(chart, annotations)
+
+        elif element == AuxiliaryElement.HIGHLIGHT:
+            # Highlight specific data points (max/min values) with different colors and shapes
+
+            # Determine which column to highlight based on mapping
+            if mapping.y:
+                # Standard case: highlight y values (bar charts, line charts)
+                y_col = data[mapping.y]
+                max_idx = y_col.arg_max()
+                min_idx = y_col.arg_min()
+
+                if max_idx is not None and min_idx is not None and mapping.x:
+                    # Get the actual data points for highlighting
+                    max_point = data.row(max_idx, named=True)
+                    min_point = data.row(min_idx, named=True)
+
+                    # Create highlight data
+                    highlight_data = pl.DataFrame(
+                        [
+                            {mapping.x: max_point[mapping.x], mapping.y: max_point[mapping.y], "point_type": "Max"},
+                            {mapping.x: min_point[mapping.x], mapping.y: min_point[mapping.y], "point_type": "Min"},
+                        ]
+                    )
+
+                    # Determine proper x-axis encoding based on data type
+                    x_col_data = data[mapping.x]
+                    x_encoding = f"{mapping.x}:N"  # Default to nominal
+
+                    # Check if x column contains dates or numeric values
+                    if hasattr(x_col_data, "dtype"):
+                        dtype_str = str(x_col_data.dtype).lower()
+                        if "date" in dtype_str or "time" in dtype_str:
+                            x_encoding = f"{mapping.x}:T"
+                        elif hasattr(x_col_data.dtype, "is_numeric") and x_col_data.dtype.is_numeric():
+                            x_encoding = f"{mapping.x}:Q"
+
+                    highlights = (
+                        alt.Chart(self.prepare_data_for_altair(highlight_data))
+                        .mark_circle(
+                            size=100,  # Larger than normal points
+                            stroke="white",  # White border for visibility
+                            strokeWidth=2,
+                        )
+                        .encode(
+                            x=x_encoding,
+                            y=f"{mapping.y}:Q",
+                            color=alt.Color(
+                                "point_type:N",
+                                scale=alt.Scale(
+                                    domain=["Max", "Min"],
+                                    range=["red", "blue"],  # Red for max, blue for min
+                                ),
+                                legend=alt.Legend(title="Highlighted Points"),
+                            ),
+                        )
+                    )
+                    return alt.layer(chart, highlights)
+
+            elif mapping.x:
+                # Histogram case: highlight distribution characteristics
+                x_col = data[mapping.x]
+                mean_val = x_col.mean()
+                std_val = x_col.std()
+
+                if mean_val is not None and std_val is not None:
+                    # Highlight mean and standard deviation points
+                    highlight_data = pl.DataFrame(
+                        [
+                            {
+                                mapping.x: mean_val,
+                                "point_type": "Mean",
+                                "y_pos": 25,  # Fixed y position
+                            },
+                            {mapping.x: mean_val + std_val, "point_type": "+1SD", "y_pos": 15},
+                        ]
+                    )
+
+                    highlights = (
+                        alt.Chart(self.prepare_data_for_altair(highlight_data))
+                        .mark_circle(size=80, stroke="white", strokeWidth=2)
+                        .encode(
+                            x=f"{mapping.x}:Q",
+                            y="y_pos:Q",
+                            color=alt.Color(
+                                "point_type:N",
+                                scale=alt.Scale(domain=["Mean", "+1SD"], range=["red", "orange"]),
+                                legend=alt.Legend(title="Distribution Points"),
+                            ),
+                        )
+                    )
+                    return alt.layer(chart, highlights)
 
         return chart
 

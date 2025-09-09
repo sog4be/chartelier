@@ -105,20 +105,6 @@ class TestMultiLineTemplate:
         # Should return a layer chart with mean lines per series
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-    def test_auxiliary_regression_per_series(
-        self, template: MultiLineTemplate, sample_numeric_multi_series_data: pl.DataFrame
-    ) -> None:
-        """Test applying regression line auxiliary element per series."""
-        mapping = MappingConfig(x="x", y="y", color="group")
-        chart = template.build(sample_numeric_multi_series_data, mapping)
-
-        # Apply regression line - should compute per series
-        chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.REGRESSION], sample_numeric_multi_series_data, mapping
-        )
-
-        # Should return a layer chart with regression lines per series
-        assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: MultiLineTemplate) -> None:
         """Test that multi-line chart allows appropriate auxiliary elements."""
@@ -127,9 +113,9 @@ class TestMultiLineTemplate:
 
         # Multi-line charts should allow trend and reference lines
         assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.REGRESSION in allowed
         assert AuxiliaryElement.MOVING_AVG in allowed
         assert AuxiliaryElement.TARGET_LINE in allowed
+        assert AuxiliaryElement.MEDIAN_LINE in allowed
 
     def test_mapping_validation(self, template: MultiLineTemplate) -> None:
         """Test mapping validation for required encodings."""

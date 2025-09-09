@@ -174,3 +174,5 @@ Desktop.ini
 
 # Test outputs for visual inspection
 test_outputs/
+tests/local/visual_output/charts/
+tests/local/visual_output/auxiliary_matrix/

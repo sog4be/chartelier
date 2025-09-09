@@ -124,49 +124,5 @@ class BarTemplate(BaseTemplate):
         Returns:
             Modified chart
         """
-        # Use base implementation for common elements
-        if element in [AuxiliaryElement.MEAN_LINE, AuxiliaryElement.MEDIAN_LINE]:
-            return super()._apply_single_auxiliary(chart, element, data, mapping)
-
-        # Bar chart specific implementations
-        if element == AuxiliaryElement.TARGET_LINE and mapping.y:
-            # For bar charts, target line should be horizontal
-            # This would be configured with actual target value from metadata
-            target_value = 0  # Placeholder - would come from auxiliary config
-            rule = (
-                alt.Chart(pl.DataFrame({"target": [target_value]}))
-                .mark_rule(
-                    color="green",
-                    strokeDash=[10, 5],
-                    strokeWidth=2,
-                )
-                .encode(y="target:Q")
-            )
-            return alt.layer(chart, rule)
-
-        if element == AuxiliaryElement.THRESHOLD and mapping.y:
-            # Threshold band for acceptable range
-            # Placeholder values - would come from auxiliary config
-            lower_threshold = -10
-            upper_threshold = 10
-            band = (
-                alt.Chart(
-                    pl.DataFrame(
-                        {
-                            "lower": [lower_threshold],
-                            "upper": [upper_threshold],
-                        }
-                    )
-                )
-                .mark_rect(
-                    opacity=0.2,
-                    color="gray",
-                )
-                .encode(
-                    y=alt.Y("lower:Q"),
-                    y2=alt.Y2("upper:Q"),
-                )
-            )
-            return alt.layer(band, chart)  # Band behind bars
-
-        return chart
+        # Use base implementation for all auxiliary elements
+        return super()._apply_single_auxiliary(chart, element, data, mapping)

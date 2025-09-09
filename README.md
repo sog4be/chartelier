@@ -114,6 +114,9 @@ uv run tox -e py311
 
 # Run tests directly with pytest
 uv run pytest
+
+# Run local development tests (visual outputs, performance tests)
+pytest tests/local/ -v
 ```
 
 #### Code Quality Checks
@@ -138,7 +141,12 @@ uv run pre-commit run --all-files
 chartelier/
 ├── src/
 │   └── chartelier/          # Main package
-├── tests/                   # Test files
+├── tests/
+│   ├── unit/                # Unit tests (run in CI)
+│   ├── integration/         # Integration tests (run in CI)
+│   ├── st/                  # System tests (run in CI)
+│   └── local/               # Local development tests (manual only)
+│       └── visual_output/   # Visual chart generation tests
 ├── docs/                    # Documentation
 ├── pyproject.toml           # Project configuration
 ├── tox.ini                  # Tox configuration (in pyproject.toml)

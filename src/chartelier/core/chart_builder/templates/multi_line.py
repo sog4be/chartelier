@@ -28,7 +28,6 @@ class MultiLineTemplate(BaseTemplate):
             allowed_auxiliary=[
                 AuxiliaryElement.MEAN_LINE,
                 AuxiliaryElement.MEDIAN_LINE,
-                AuxiliaryElement.REGRESSION,
                 AuxiliaryElement.MOVING_AVG,
                 AuxiliaryElement.TARGET_LINE,
                 AuxiliaryElement.THRESHOLD,
@@ -133,7 +132,7 @@ class MultiLineTemplate(BaseTemplate):
         Returns:
             Modified chart
         """
-        # For multi-line charts, mean/median lines should be computed per series
+        # For multi-line charts, certain elements need special handling
         if element == AuxiliaryElement.MEAN_LINE and mapping.y and mapping.color:
             # Calculate mean for each series
             mean_data = data.group_by(mapping.color).agg(pl.col(mapping.y).mean().alias("mean_value"))
@@ -156,26 +155,57 @@ class MultiLineTemplate(BaseTemplate):
             )
             return alt.layer(chart, rule)
 
-        if element == AuxiliaryElement.REGRESSION and mapping.x and mapping.y and mapping.color:
-            # Create regression lines for each series
-            regression = (
-                alt.Chart(self.prepare_data_for_altair(data))
-                .transform_regression(
-                    on=mapping.x,
-                    regression=mapping.y,
-                    groupby=[mapping.color],  # Separate regression per series
+        if element == AuxiliaryElement.HIGHLIGHT and mapping.x and mapping.y and mapping.color:
+            # For multi-line charts, highlight max/min points across all series
+            # but maintain the line chart structure
+            y_col = data[mapping.y]
+            max_idx = y_col.arg_max()
+            min_idx = y_col.arg_min()
+
+            if max_idx is not None and min_idx is not None:
+                # Get the actual data points for highlighting
+                max_point = data.row(max_idx, named=True)
+                min_point = data.row(min_idx, named=True)
+
+                # Create highlight data
+                highlight_data = pl.DataFrame(
+                    [
+                        {
+                            mapping.x: max_point[mapping.x],
+                            mapping.y: max_point[mapping.y],
+                            mapping.color: max_point[mapping.color],
+                            "point_type": "Max",
+                        },
+                        {
+                            mapping.x: min_point[mapping.x],
+                            mapping.y: min_point[mapping.y],
+                            mapping.color: min_point[mapping.color],
+                            "point_type": "Min",
+                        },
+                    ]
                 )
-                .mark_line(
-                    strokeDash=[3, 3],
-                    strokeWidth=1.5,
+
+                # Create highlight layer with larger circles
+                # Use the same color encoding as the main chart to maintain consistency
+                highlights = (
+                    alt.Chart(self.prepare_data_for_altair(highlight_data))
+                    .mark_circle(
+                        size=150,  # Larger than the line points
+                        stroke="white",  # White border for visibility
+                        strokeWidth=3,
+                        opacity=0.8,
+                    )
+                    .encode(
+                        x=f"{mapping.x}:T",  # Multi-line usually uses temporal x-axis
+                        y=f"{mapping.y}:Q",
+                        color=alt.Color(
+                            f"{mapping.color}:N",
+                            scale=alt.Scale(scheme="category10"),
+                            title=f"{mapping.color}, Highlighted Points",
+                        ),
+                    )
                 )
-                .encode(
-                    x=f"{mapping.x}:Q",
-                    y=f"{mapping.y}:Q",
-                    color=alt.Color(f"{mapping.color}:N", scale=alt.Scale(scheme="category10")),
-                )
-            )
-            return alt.layer(chart, regression)
+                return alt.layer(chart, highlights)
 
         # Use base implementation for other elements
         return super()._apply_single_auxiliary(chart, element, data, mapping)

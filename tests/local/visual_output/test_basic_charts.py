@@ -1,6 +1,11 @@
-"""Visual output tests for chart templates - generates actual images for manual inspection."""
+"""Basic visual output tests for chart templates - generates representative images for manual inspection.
 
-import os
+These tests are designed for local development and manual verification only.
+They generate actual chart images to verify visual output quality.
+
+Run with: pytest tests/local/visual_output/test_basic_charts.py -v
+"""
+
 from pathlib import Path
 
 import polars as pl
@@ -20,7 +25,7 @@ class TestVisualOutput:
     @pytest.fixture
     def output_dir(self):
         """Create output directory for test images."""
-        output_path = Path("test_outputs/charts")
+        output_path = Path("tests/local/visual_output/charts")
         output_path.mkdir(parents=True, exist_ok=True)
         return output_path
 
@@ -194,10 +199,6 @@ class TestVisualOutput:
 
         return pl.DataFrame(data)
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p01_line_chart(self, builder, time_series_data, output_dir):
         """Generate P01 line chart with trend analysis."""
         mapping = MappingConfig(x="date", y="value")
@@ -232,10 +233,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p02_bar_chart(self, builder, categorical_data, output_dir):
         """Generate P02 bar chart for category comparison."""
         mapping = MappingConfig(x="department", y="headcount")
@@ -270,10 +267,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p03_histogram(self, builder, distribution_data, output_dir):
         """Generate P03 histogram for distribution analysis."""
         mapping = MappingConfig(x="test_scores")
@@ -308,20 +301,16 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p12_multi_line_chart(self, builder, multi_series_data, output_dir):
         """Generate P12 multi-line chart for multiple time series comparison."""
         mapping = MappingConfig(x="date", y="value", color="series")
 
-        # Build chart with regression lines per series
+        # Build chart with mean lines per series (regression removed)
         chart = builder.build(
             template_id="P12_multi_line",
             data=multi_series_data,
             mapping=mapping,
-            auxiliary=["mean_line", "regression"],
+            auxiliary=["mean_line"],
             width=1200,
             height=600,
         )
@@ -346,10 +335,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p21_grouped_bar_chart(self, builder, grouped_data, output_dir):
         """Generate P21 grouped bar chart for category comparison over time."""
         mapping = MappingConfig(x="quarter", y="sales", color="region")
@@ -384,10 +369,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p23_overlay_histogram(self, builder, category_distribution_data, output_dir):
         """Generate P23 overlay histogram for category-wise distribution comparison."""
         mapping = MappingConfig(x="value", color="group")
@@ -422,10 +403,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_p32_box_plot(self, builder, box_plot_data, output_dir):
         """Generate P32 box plot for distribution comparison between categories."""
         mapping = MappingConfig(x="department", y="salary")
@@ -460,10 +437,6 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
-    @pytest.mark.skipif(
-        os.getenv("SKIP_VISUAL_TESTS", "true").lower() == "true",
-        reason="Visual tests skipped by default. Set SKIP_VISUAL_TESTS=false to run.",
-    )
     def test_all_templates_overview(self, builder, output_dir):
         """Generate an overview showing all implemented template types."""
         # Create a summary DataFrame for all test results
@@ -515,12 +488,12 @@ class TestVisualOutput:
 def test_visual_output_instructions():
     """Display instructions for running visual tests.
 
-    VISUAL OUTPUT TEST INSTRUCTIONS
-    ================================
+    BASIC VISUAL OUTPUT TEST INSTRUCTIONS
+    ====================================
 
-    To generate chart images for manual inspection:
-    1. Run: SKIP_VISUAL_TESTS=false pytest tests/unit/core/chart_builder/test_visual_output.py -v -s
-    2. Check the generated images in: test_outputs/charts/
+    To generate representative chart images for manual inspection:
+    1. Run: pytest tests/local/visual_output/test_basic_charts.py -v -s
+    2. Check the generated images in: tests/local/visual_output/charts/
     3. Images will be saved in both SVG and PNG formats (if vl-convert is available)
 
     Generated files:
@@ -530,7 +503,7 @@ def test_visual_output_instructions():
     - P03_histogram.svg/png - Histogram showing distribution with mean and median
 
     Advanced Templates (P12, P21, P23, P32):
-    - P12_multi_line_chart.svg/png - Multi-line chart with per-series regression lines
+    - P12_multi_line_chart.svg/png - Multi-line chart with per-series mean lines
     - P21_grouped_bar_chart.svg/png - Grouped bars showing quarterly regional performance
     - P23_overlay_histogram.svg/png - Overlaid histograms with category-specific mean/median
     - P32_box_plot.svg/png - Box plot comparing salary distributions by department
@@ -540,9 +513,11 @@ def test_visual_output_instructions():
 
     Each chart demonstrates:
     - The primary visualization pattern (Transition/Difference/Overview + combinations)
-    - Auxiliary elements appropriate for that chart type
+    - Basic auxiliary elements appropriate for that chart type
     - Compliance with Visualization Policy (e.g., zero origin for bars, consistent colors)
     - Template-specific features (faceting, grouping, overlays, statistical summaries)
+
+    For comprehensive auxiliary element testing, see test_auxiliary_matrix.py
     """
     instructions = test_visual_output_instructions.__doc__
     logger.info("Visual test instructions", instructions=instructions)

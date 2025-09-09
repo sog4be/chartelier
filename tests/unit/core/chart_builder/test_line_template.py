@@ -110,16 +110,6 @@ class TestLineTemplate:
         # Should return a layer chart with horizontal mean line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-    def test_auxiliary_regression_line(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
-        """Test applying regression line auxiliary element."""
-        mapping = MappingConfig(x="x", y="y")
-        chart = template.build(sample_numeric_data, mapping)
-
-        # Apply regression line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.REGRESSION], sample_numeric_data, mapping)
-
-        # Should return a layer chart with regression line
-        assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_multiple_auxiliary_elements(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test applying multiple auxiliary elements."""
@@ -128,7 +118,7 @@ class TestLineTemplate:
 
         # Apply multiple auxiliary elements
         chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE, AuxiliaryElement.REGRESSION], sample_numeric_data, mapping
+            chart, [AuxiliaryElement.MEAN_LINE, AuxiliaryElement.MOVING_AVG], sample_numeric_data, mapping
         )
 
         # Should return a layer chart with both elements
@@ -141,9 +131,9 @@ class TestLineTemplate:
 
         # Line charts should allow trend and reference lines
         assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.REGRESSION in allowed
         assert AuxiliaryElement.MOVING_AVG in allowed
         assert AuxiliaryElement.TARGET_LINE in allowed
+        assert AuxiliaryElement.MEDIAN_LINE in allowed
 
     def test_no_zero_origin_required(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test that line charts don't enforce zero origin as per Visualization Policy."""
