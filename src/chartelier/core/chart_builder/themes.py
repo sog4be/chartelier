@@ -49,13 +49,13 @@ class Theme:
                 grid=False,  # Disable grid lines
                 labelColor=self.text.AXIS_LABEL,
                 labelFont=chartelier_fonts.get_font_string(),
-                labelFontSize=11,
+                labelFontSize=14,  # Increased for 300dpi readability
                 tickColor=self.structural.TICK_LINE,
                 tickSize=5,
                 tickWidth=1,
                 titleColor=self.text.AXIS_LABEL,
                 titleFont=chartelier_fonts.get_font_string(),
-                titleFontSize=12,
+                titleFontSize=16,  # Increased for 300dpi readability
                 titleFontWeight="normal",
             )
             .configure_axisX(
@@ -67,17 +67,17 @@ class Theme:
             .configure_legend(
                 labelColor=self.text.LEGEND,
                 labelFont=chartelier_fonts.get_font_string(),
-                labelFontSize=11,
+                labelFontSize=14,  # Increased for 300dpi readability
                 titleColor=self.text.LEGEND,
                 titleFont=chartelier_fonts.get_font_string(),
-                titleFontSize=12,
+                titleFontSize=16,  # Increased for 300dpi readability
                 orient="top-right",  # Default to top-right to avoid axis overlap
             )
             .configure_title(
                 color=self.text.TITLE,
                 font=chartelier_fonts.get_font_string(),
-                fontSize=18,  # Increased from 14 for better visibility
-                fontWeight="bold",
+                fontSize=22,  # Increased for 300dpi readability
+                fontWeight=600,  # Semi-bold instead of bold for better balance
                 anchor="start",
             )
             .configure_view(
@@ -101,13 +101,13 @@ class Theme:
                 "grid": False,  # Disable grid lines
                 "labelColor": self.text.AXIS_LABEL,
                 "labelFont": chartelier_fonts.get_font_string(),
-                "labelFontSize": 11,
+                "labelFontSize": 14,  # Increased for 300dpi readability
                 "tickColor": self.structural.TICK_LINE,
                 "tickSize": 5,
                 "tickWidth": 1,
                 "titleColor": self.text.AXIS_LABEL,
                 "titleFont": chartelier_fonts.get_font_string(),
-                "titleFontSize": 12,
+                "titleFontSize": 16,  # Increased for 300dpi readability
                 "titleFontWeight": "normal",
             },
             "axisX": {
@@ -119,17 +119,17 @@ class Theme:
             "legend": {
                 "labelColor": self.text.LEGEND,
                 "labelFont": chartelier_fonts.get_font_string(),
-                "labelFontSize": 11,
+                "labelFontSize": 14,  # Increased for 300dpi readability
                 "titleColor": self.text.LEGEND,
                 "titleFont": chartelier_fonts.get_font_string(),
-                "titleFontSize": 12,
+                "titleFontSize": 16,  # Increased for 300dpi readability
                 "orient": "top-right",
             },
             "title": {
                 "color": self.text.TITLE,
                 "font": chartelier_fonts.get_font_string(),
-                "fontSize": 18,  # Increased from 14 for better visibility
-                "fontWeight": "bold",
+                "fontSize": 22,  # Increased for 300dpi readability
+                "fontWeight": 600,  # Semi-bold instead of bold for better balance
                 "anchor": "start",
             },
             "view": {

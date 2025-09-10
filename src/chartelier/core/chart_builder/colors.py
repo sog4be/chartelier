@@ -189,7 +189,7 @@ class ColorStrategy:
                 "opacity": 0.8,
             },
             AuxiliaryElement.TARGET_LINE: {
-                "color": self.data.POSITIVE,
+                "color": "#334155",  # Gray color for better visual neutrality
                 "stroke_dash": list(self.style.DASH_PATTERN_MEDIUM),
                 "stroke_width": self.style.LINE_WIDTH_DEFAULT,
                 "opacity": 0.8,
