@@ -7,7 +7,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -59,8 +59,14 @@ class HistogramTemplate(BaseTemplate):
         n_rows = len(data)
         bin_count = self._calculate_bin_count(n_rows)
 
-        # Create base chart with binning
-        chart = alt.Chart(chart_data).mark_bar()
+        # Get P03 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P03)
+
+        # Create base chart with binning and primary color
+        chart = alt.Chart(chart_data).mark_bar(
+            color=pattern_colors.get("primary", self.color_strategy.data.BASE),
+            opacity=pattern_colors.get("fill_opacity", self.color_strategy.style.BAR_FILL_OPACITY),
+        )
 
         # Build encodings
         encodings: dict[str, Any] = {}

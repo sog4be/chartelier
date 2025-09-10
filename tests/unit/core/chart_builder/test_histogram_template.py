@@ -59,7 +59,8 @@ class TestHistogramTemplate:
 
         assert isinstance(chart, alt.Chart)
         # Check mark type
-        assert chart.mark == "bar"
+        chart_dict = chart.to_dict()
+        assert chart_dict["mark"]["type"] == "bar"
         # Check encodings
         chart_dict = chart.to_dict()
         assert "x" in chart_dict["encoding"]

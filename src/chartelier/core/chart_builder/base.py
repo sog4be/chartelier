@@ -6,7 +6,9 @@ from typing import Any
 import altair as alt
 import polars as pl
 
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.chart_builder.colors import color_strategy
+from chartelier.core.chart_builder.themes import default_theme
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -64,6 +66,8 @@ class BaseTemplate(ABC):
     def __init__(self) -> None:
         """Initialize base template."""
         self.spec = self._get_spec()
+        self.theme = default_theme
+        self.color_strategy = color_strategy
 
     @abstractmethod
     def _get_spec(self) -> TemplateSpec:
@@ -92,6 +96,26 @@ class BaseTemplate(ABC):
         Returns:
             Altair chart object
         """
+
+    def apply_theme(
+        self,
+        chart: alt.Chart,
+        pattern_id: PatternID | None = None,
+        series_count: int = 1,
+    ) -> alt.Chart:
+        """Apply theme settings to a chart.
+
+        Args:
+            chart: Altair chart object
+            pattern_id: Optional pattern ID for pattern-specific styling
+            series_count: Number of series for color scheme selection
+
+        Returns:
+            Chart with theme applied
+        """
+        if pattern_id:
+            return self.theme.apply_pattern_specific(chart, pattern_id, series_count)
+        return self.theme.apply_to_chart(chart)
 
     def apply_auxiliary(
         self,
@@ -138,14 +162,20 @@ class BaseTemplate(ABC):
             Modified chart
         """
         # Default implementation - subclasses can override
+        # Get auxiliary element styling from color strategy
+        aux_style = self.color_strategy.get_auxiliary_colors(element)
+
         if element == AuxiliaryElement.MEAN_LINE and mapping.y:
             mean_val = data[mapping.y].mean()
             if mean_val is not None:
+                rule_data = self.prepare_data_for_altair(pl.DataFrame({"mean": [mean_val]}))
                 rule = (
-                    alt.Chart(pl.DataFrame({"mean": [mean_val]}))
+                    alt.Chart(rule_data)
                     .mark_rule(
-                        color="red",
-                        strokeDash=[5, 5],
+                        color=aux_style.get("color", "red"),
+                        strokeDash=aux_style.get("stroke_dash", [5, 5]),
+                        strokeWidth=aux_style.get("stroke_width", 2),
+                        opacity=aux_style.get("opacity", 0.8),
                     )
                     .encode(y="mean:Q")
                 )
@@ -155,11 +185,14 @@ class BaseTemplate(ABC):
         elif element == AuxiliaryElement.MEDIAN_LINE and mapping.y:
             median_val = data[mapping.y].median()
             if median_val is not None:
+                rule_data = self.prepare_data_for_altair(pl.DataFrame({"median": [median_val]}))
                 rule = (
-                    alt.Chart(pl.DataFrame({"median": [median_val]}))
+                    alt.Chart(rule_data)
                     .mark_rule(
-                        color="orange",
-                        strokeDash=[3, 3],
+                        color=aux_style.get("color", "orange"),
+                        strokeDash=aux_style.get("stroke_dash", [5, 5]),
+                        strokeWidth=aux_style.get("stroke_width", 2),
+                        opacity=aux_style.get("opacity", 0.8),
                     )
                     .encode(y="median:Q")
                 )
@@ -169,12 +202,14 @@ class BaseTemplate(ABC):
             # Use the 75th percentile as a target line example
             target_val = data[mapping.y].quantile(0.75)
             if target_val is not None:
+                rule_data = self.prepare_data_for_altair(pl.DataFrame({"target": [target_val]}))
                 rule = (
-                    alt.Chart(pl.DataFrame({"target": [target_val]}))
+                    alt.Chart(rule_data)
                     .mark_rule(
-                        color="green",
-                        strokeDash=[8, 4],
-                        strokeWidth=2,
+                        color=aux_style.get("color", "green"),
+                        strokeDash=aux_style.get("stroke_dash", [10, 5]),
+                        strokeWidth=aux_style.get("stroke_width", 2),
+                        opacity=aux_style.get("opacity", 0.8),
                     )
                     .encode(y="target:Q")
                 )
@@ -201,7 +236,10 @@ class BaseTemplate(ABC):
 
                     area = (
                         alt.Chart(self.prepare_data_for_altair(threshold_data))
-                        .mark_rect(opacity=0.2, color="gray")
+                        .mark_rect(
+                            opacity=aux_style.get("opacity", 0.3),
+                            color=aux_style.get("fill_color", self.color_strategy.data.NEGATIVE_FILL),
+                        )
                         .encode(y="lower:Q", y2="upper:Q")
                     )
                     return alt.layer(chart, area)
@@ -215,8 +253,10 @@ class BaseTemplate(ABC):
                     regression=mapping.y,
                 )
                 .mark_line(
-                    color="blue",
-                    strokeDash=[3, 3],
+                    color=aux_style.get("color", self.color_strategy.data.ACCENT),
+                    strokeDash=aux_style.get("stroke_dash", [3, 3]),
+                    strokeWidth=aux_style.get("stroke_width", 1.5),
+                    opacity=aux_style.get("opacity", 0.7),
                 )
                 .encode(
                     x=f"{mapping.x}:Q",
@@ -246,9 +286,10 @@ class BaseTemplate(ABC):
                     frame=[-4, 0],  # 5-point moving average (current + 4 previous)
                 )
                 .mark_line(
-                    color="purple",
-                    strokeWidth=2,
-                    strokeDash=[2, 2],
+                    color=aux_style.get("color", self.color_strategy.structural.AXIS_LINE),
+                    strokeWidth=aux_style.get("stroke_width", 1.5),
+                    strokeDash=aux_style.get("stroke_dash", []),
+                    opacity=aux_style.get("opacity", 0.7),
                 )
                 .encode(x=x_encoding, y="rolling_mean:Q")
             )
@@ -306,7 +347,7 @@ class BaseTemplate(ABC):
                             dx=0,
                             dy=-10,  # Position above the bar
                             fontSize=12,
-                            color="black",
+                            color=aux_style.get("text_color", self.color_strategy.text.AXIS_LABEL),
                             fontWeight="bold",
                         )
                         .encode(x=x_encoding, y=f"{mapping.y}:Q", text="annotation:N")
@@ -347,7 +388,14 @@ class BaseTemplate(ABC):
 
                         annotations = (
                             alt.Chart(self.prepare_data_for_altair(annotation_data))
-                            .mark_text(align="center", dx=0, dy=-10, fontSize=10, color="black", fontWeight="bold")
+                            .mark_text(
+                                align="center",
+                                dx=0,
+                                dy=-10,
+                                fontSize=10,
+                                color=aux_style.get("text_color", self.color_strategy.text.AXIS_LABEL),
+                                fontWeight="bold",
+                            )
                             .encode(x=f"{mapping.x}:Q", y="y_pos:Q", text="annotation:N")
                         )
                         return alt.layer(chart, annotations)
@@ -390,8 +438,8 @@ class BaseTemplate(ABC):
                     highlights = (
                         alt.Chart(self.prepare_data_for_altair(highlight_data))
                         .mark_circle(
-                            size=100,  # Larger than normal points
-                            stroke="white",  # White border for visibility
+                            size=aux_style.get("size", 100),  # Larger than normal points
+                            stroke=self.color_strategy.structural.BACKGROUND,  # White border for visibility
                             strokeWidth=2,
                         )
                         .encode(
@@ -401,7 +449,10 @@ class BaseTemplate(ABC):
                                 "point_type:N",
                                 scale=alt.Scale(
                                     domain=["Max", "Min"],
-                                    range=["red", "blue"],  # Red for max, blue for min
+                                    range=[
+                                        self.color_strategy.data.NEGATIVE,
+                                        self.color_strategy.data.BASE,
+                                    ],  # Semantic colors
                                 ),
                                 legend=alt.Legend(title="Highlighted Points"),
                             ),
@@ -439,13 +490,23 @@ class BaseTemplate(ABC):
 
                         highlights = (
                             alt.Chart(self.prepare_data_for_altair(highlight_data))
-                            .mark_circle(size=80, stroke="white", strokeWidth=2)
+                            .mark_circle(
+                                size=aux_style.get("size", 80),
+                                stroke=self.color_strategy.structural.BACKGROUND,
+                                strokeWidth=2,
+                            )
                             .encode(
                                 x=f"{mapping.x}:Q",
                                 y="y_pos:Q",
                                 color=alt.Color(
                                     "point_type:N",
-                                    scale=alt.Scale(domain=["Mean", "+1SD"], range=["red", "orange"]),
+                                    scale=alt.Scale(
+                                        domain=["Mean", "+1SD"],
+                                        range=[
+                                            self.color_strategy.data.NEGATIVE,
+                                            self.color_strategy.data.ACCENT,
+                                        ],
+                                    ),
                                     legend=alt.Legend(title="Distribution Points"),
                                 ),
                             )

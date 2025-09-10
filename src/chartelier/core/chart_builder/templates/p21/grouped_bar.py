@@ -89,7 +89,7 @@ class GroupedBarTemplate(BaseTemplate):
             encodings["color"] = alt.Color(
                 f"{mapping.color}:N",
                 title=mapping.color,
-                scale=alt.Scale(scheme="category10"),  # Use consistent color scheme
+                # Don't set scale here - let theme handle the color scheme
             )
 
         # Use x-offset for grouped bars instead of column faceting

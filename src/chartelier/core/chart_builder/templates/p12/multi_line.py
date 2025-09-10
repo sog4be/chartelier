@@ -95,7 +95,7 @@ class MultiLineTemplate(BaseTemplate):
             encodings["color"] = alt.Color(
                 f"{mapping.color}:N",
                 title=mapping.color,
-                scale=alt.Scale(scheme="category10"),  # Use consistent color scheme
+                # Don't set scale here - let theme handle the color scheme
             )
 
         # Optional encodings
@@ -146,7 +146,7 @@ class MultiLineTemplate(BaseTemplate):
                 )
                 .encode(
                     y=alt.Y("mean_value:Q"),
-                    color=alt.Color(f"{mapping.color}:N", scale=alt.Scale(scheme="category10")),
+                    color=alt.Color(f"{mapping.color}:N"),
                     tooltip=[
                         alt.Tooltip(f"{mapping.color}:N", title="Series"),
                         alt.Tooltip("mean_value:Q", format=".2f", title="Mean"),
@@ -200,7 +200,7 @@ class MultiLineTemplate(BaseTemplate):
                         y=f"{mapping.y}:Q",
                         color=alt.Color(
                             f"{mapping.color}:N",
-                            scale=alt.Scale(scheme="category10"),
+                            # Don't set scale here - let theme handle the color scheme
                             title=f"{mapping.color}, Highlighted Points",
                         ),
                     )

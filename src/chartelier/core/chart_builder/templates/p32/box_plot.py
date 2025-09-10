@@ -80,7 +80,9 @@ class BoxPlotTemplate(BaseTemplate):
         # Optional encodings
         if mapping.color:
             encodings["color"] = alt.Color(
-                f"{mapping.color}:N", title=mapping.color, scale=alt.Scale(scheme="category10")
+                f"{mapping.color}:N",
+                title=mapping.color,
+                # Don't set scale here - let theme handle the color scheme
             )
 
         # Apply encodings

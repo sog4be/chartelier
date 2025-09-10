@@ -173,7 +173,7 @@ class ChartBuilder:
             raise ChartBuildError(msg)
 
         try:
-            # Build base chart
+            # Build base chart (without theme)
             chart = template.build(data, mapping, width, height)
 
             # Apply auxiliary elements if requested
@@ -192,11 +192,45 @@ class ChartBuilder:
                 if aux_elements:
                     chart = template.apply_auxiliary(chart, aux_elements, data, mapping)  # type: ignore[assignment]
 
-            return chart  # noqa: TRY300 — Chart needs to be returned when successful
+            # Apply theme to final chart (base + auxiliary elements)
+            pattern_id = self._extract_pattern_id(template_id)
+            series_count = self._count_series(data, mapping)
+            return template.apply_theme(chart, pattern_id, series_count)
 
         except Exception as e:
             msg = f"Failed to build chart: {e}"
             raise ChartBuildError(msg) from e
+
+    def _extract_pattern_id(self, template_id: str) -> PatternID | None:
+        """Extract pattern ID from template ID.
+
+        Args:
+            template_id: Template identifier like "P01_line"
+
+        Returns:
+            Pattern ID or None if not found
+        """
+        try:
+            pattern_part = template_id.split("_")[0]  # Extract P01 from P01_line
+            from chartelier.core.enums import PatternID  # noqa: PLC0415
+
+            return PatternID(pattern_part)
+        except (ValueError, IndexError):
+            return None
+
+    def _count_series(self, data: pl.DataFrame, mapping: MappingConfig) -> int:
+        """Count the number of series in the data based on color mapping.
+
+        Args:
+            data: Input data frame
+            mapping: Column mappings
+
+        Returns:
+            Number of series
+        """
+        if mapping.color and mapping.color in data.columns:
+            return data[mapping.color].n_unique()
+        return 1
 
     def export(
         self,
