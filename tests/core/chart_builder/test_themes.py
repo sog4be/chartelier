@@ -1,5 +1,8 @@
 """Tests for the theme management module."""
 
+import os
+from unittest.mock import patch
+
 import altair as alt
 import polars as pl
 
@@ -85,6 +88,11 @@ class TestTheme:
         assert axis_config["gridWidth"] == theme.style.GRID_LINE_WIDTH
         assert axis_config["labelFontSize"] == 11
         assert axis_config["titleFontSize"] == 12
+        # Check font configuration
+        assert "labelFont" in axis_config
+        assert "titleFont" in axis_config
+        assert isinstance(axis_config["labelFont"], str)
+        assert isinstance(axis_config["titleFont"], str)
 
     def test_legend_configuration(self) -> None:
         """Test legend configuration in theme."""
@@ -95,6 +103,11 @@ class TestTheme:
         assert legend_config["labelFontSize"] == 11
         assert legend_config["titleFontSize"] == 12
         assert legend_config["orient"] == "top-right"
+        # Check font configuration
+        assert "labelFont" in legend_config
+        assert "titleFont" in legend_config
+        assert isinstance(legend_config["labelFont"], str)
+        assert isinstance(legend_config["titleFont"], str)
 
     def test_title_configuration(self) -> None:
         """Test title configuration in theme."""
@@ -105,6 +118,9 @@ class TestTheme:
         assert title_config["fontSize"] == 14
         assert title_config["fontWeight"] == "bold"
         assert title_config["anchor"] == "start"
+        # Check font configuration
+        assert "font" in title_config
+        assert isinstance(title_config["font"], str)
 
     def test_global_default_theme(self) -> None:
         """Test that global default_theme instance is available."""
@@ -116,3 +132,26 @@ class TestTheme:
         assert default_theme.text is not None
         assert default_theme.data is not None
         assert default_theme.style is not None
+
+    def test_font_configuration_local(self) -> None:
+        """Test font configuration in local environment."""
+        with patch.dict(os.environ, {}, clear=True):
+            theme = Theme()
+            config = theme.get_base_config()
+
+            # Check that font stacks contain expected fonts
+            axis_font = config["axis"]["labelFont"]
+            assert "IBM Plex Sans JP" in axis_font or "Noto Sans" in axis_font
+            assert "sans-serif" in axis_font
+
+    def test_font_configuration_ci(self) -> None:
+        """Test font configuration in CI environment."""
+        with patch.dict(os.environ, {"CI": "true"}):
+            theme = Theme()
+            config = theme.get_base_config()
+
+            # Check that CI fonts are used
+            axis_font = config["axis"]["labelFont"]
+            assert "Noto Sans" in axis_font
+            assert "IBM Plex Sans JP" not in axis_font
+            assert "sans-serif" in axis_font

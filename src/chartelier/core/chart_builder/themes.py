@@ -15,6 +15,7 @@ from chartelier.core.chart_builder.colors import (
     StyleConstants,
     TextColors,
 )
+from chartelier.core.chart_builder.fonts import chartelier_fonts
 
 
 class Theme:
@@ -49,11 +50,13 @@ class Theme:
                 gridOpacity=self.style.GRID_OPACITY,
                 gridWidth=self.style.GRID_LINE_WIDTH,
                 labelColor=self.text.AXIS_LABEL,
+                labelFont=chartelier_fonts.get_font_string(),
                 labelFontSize=11,
                 tickColor=self.structural.TICK_LINE,
                 tickSize=5,
                 tickWidth=1,
                 titleColor=self.text.AXIS_LABEL,
+                titleFont=chartelier_fonts.get_font_string(),
                 titleFontSize=12,
                 titleFontWeight="normal",
             )
@@ -65,13 +68,16 @@ class Theme:
             )
             .configure_legend(
                 labelColor=self.text.LEGEND,
+                labelFont=chartelier_fonts.get_font_string(),
                 labelFontSize=11,
                 titleColor=self.text.LEGEND,
+                titleFont=chartelier_fonts.get_font_string(),
                 titleFontSize=12,
                 orient="top-right",  # Default to top-right to avoid axis overlap
             )
             .configure_title(
                 color=self.text.TITLE,
+                font=chartelier_fonts.get_font_string(),
                 fontSize=14,
                 fontWeight="bold",
                 anchor="start",
@@ -98,11 +104,13 @@ class Theme:
                 "gridOpacity": self.style.GRID_OPACITY,
                 "gridWidth": self.style.GRID_LINE_WIDTH,
                 "labelColor": self.text.AXIS_LABEL,
+                "labelFont": chartelier_fonts.get_font_string(),
                 "labelFontSize": 11,
                 "tickColor": self.structural.TICK_LINE,
                 "tickSize": 5,
                 "tickWidth": 1,
                 "titleColor": self.text.AXIS_LABEL,
+                "titleFont": chartelier_fonts.get_font_string(),
                 "titleFontSize": 12,
                 "titleFontWeight": "normal",
             },
@@ -114,13 +122,16 @@ class Theme:
             },
             "legend": {
                 "labelColor": self.text.LEGEND,
+                "labelFont": chartelier_fonts.get_font_string(),
                 "labelFontSize": 11,
                 "titleColor": self.text.LEGEND,
+                "titleFont": chartelier_fonts.get_font_string(),
                 "titleFontSize": 12,
                 "orient": "top-right",
             },
             "title": {
                 "color": self.text.TITLE,
+                "font": chartelier_fonts.get_font_string(),
                 "fontSize": 14,
                 "fontWeight": "bold",
                 "anchor": "start",
