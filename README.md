@@ -41,6 +41,14 @@ chartelier-mcp
 chartelier-mcp --help
 ```
 
+#### Font Support
+
+Chartelier automatically detects and uses high-quality fonts when available:
+- **Local development**: IBM Plex Sans JP → IBM Plex Sans → Noto Sans CJK JP → Noto Sans → sans-serif
+- **CI environment**: Noto Sans → DejaVu Sans → Liberation Sans → sans-serif
+
+For best results with Japanese text, install IBM Plex Sans JP or Noto Sans CJK JP on your system.
+
 #### MCP Configuration Example
 
 To use with Claude Desktop, add to your MCP settings:
@@ -162,6 +170,7 @@ chartelier/
 - **MyPy**: Strict mode enabled
 - **Pytest**: Coverage reporting enabled
 - **Tox**: Environments for py311/312/313, lint, type, coverage
+- **Fonts**: Customizable font stacks with automatic CI/local environment detection
 
 ### CI/CD
 
