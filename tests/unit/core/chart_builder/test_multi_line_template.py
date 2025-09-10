@@ -90,19 +90,19 @@ class TestMultiLineTemplate:
         color_encoding = chart_dict["encoding"]["color"]
         assert color_encoding["type"] == "nominal" or ":N" in color_encoding["field"]
 
-    def test_auxiliary_mean_line_per_series(
+    def test_auxiliary_target_line(
         self, template: MultiLineTemplate, sample_numeric_multi_series_data: pl.DataFrame
     ) -> None:
-        """Test applying mean line auxiliary element per series."""
+        """Test applying target line auxiliary element."""
         mapping = MappingConfig(x="x", y="y", color="group")
         chart = template.build(sample_numeric_multi_series_data, mapping)
 
-        # Apply mean line - should compute per series
+        # Apply target line
         chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE], sample_numeric_multi_series_data, mapping
+            chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_multi_series_data, mapping
         )
 
-        # Should return a layer chart with mean lines per series
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: MultiLineTemplate) -> None:
@@ -110,11 +110,15 @@ class TestMultiLineTemplate:
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Multi-line charts should allow trend and reference lines
-        assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.MOVING_AVG in allowed
+        # Multi-line charts should only allow target line and highlight
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.MEDIAN_LINE in allowed
+        assert AuxiliaryElement.HIGHLIGHT in allowed
+        # These should NOT be allowed anymore
+        assert AuxiliaryElement.MEAN_LINE not in allowed
+        assert AuxiliaryElement.MEDIAN_LINE not in allowed
+        assert AuxiliaryElement.MOVING_AVG not in allowed
+        assert AuxiliaryElement.THRESHOLD not in allowed
+        assert AuxiliaryElement.ANNOTATION not in allowed
 
     def test_mapping_validation(self, template: MultiLineTemplate) -> None:
         """Test mapping validation for required encodings."""

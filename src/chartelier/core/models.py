@@ -83,6 +83,7 @@ class ChartMetadata(BaseModel):
     template_id: str = Field(..., description="Specific chart template used")
     mapping: MappingConfig | None = Field(default=None, description="Column mappings used")
     auxiliary: list[AuxiliaryElement] = Field(default_factory=list, description="Applied auxiliary elements")
+    auxiliary_config: dict[str, Any] = Field(default_factory=dict, description="Configuration for auxiliary elements")
     operations_applied: list[str] = Field(default_factory=list, description="Data processing operations")
     decisions: dict[str, Any] = Field(default_factory=dict, description="Decision reasoning and timings")
     warnings: list[str] = Field(default_factory=list, description="Processing warnings")

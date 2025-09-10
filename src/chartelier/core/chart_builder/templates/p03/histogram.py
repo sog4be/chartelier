@@ -133,6 +133,7 @@ class HistogramTemplate(BaseTemplate):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
+        element_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element specific to histograms.
 
@@ -206,4 +207,4 @@ class HistogramTemplate(BaseTemplate):
             return alt.layer(band, chart)  # Band behind histogram
 
         # Default to base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)
+        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

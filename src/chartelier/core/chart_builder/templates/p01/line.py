@@ -91,12 +91,7 @@ class LineTemplate(BaseTemplate):
             required_encodings=["x", "y"],
             optional_encodings=["color", "strokeDash"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
-                AuxiliaryElement.MEDIAN_LINE,
-                AuxiliaryElement.MOVING_AVG,
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
                 AuxiliaryElement.HIGHLIGHT,
             ],
         )

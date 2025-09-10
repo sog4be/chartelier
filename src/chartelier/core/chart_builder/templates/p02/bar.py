@@ -118,6 +118,7 @@ class BarTemplate(BaseTemplate):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
+        element_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element specific to bar charts.
 
@@ -131,4 +132,4 @@ class BarTemplate(BaseTemplate):
             Modified chart
         """
         # Use base implementation for all auxiliary elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)
+        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

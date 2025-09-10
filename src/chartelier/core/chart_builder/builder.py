@@ -1,6 +1,7 @@
 """Chart builder for generating visualizations."""
 
 import base64
+from typing import Any
 
 import altair as alt
 import polars as pl
@@ -142,6 +143,7 @@ class ChartBuilder:
         data: pl.DataFrame,
         mapping: MappingConfig,
         auxiliary: list[str] | None = None,
+        auxiliary_config: dict[str, Any] | None = None,
         width: int = 800,
         height: int = 600,
     ) -> alt.Chart | alt.LayerChart:
@@ -152,6 +154,7 @@ class ChartBuilder:
             data: Input data
             mapping: Column mappings
             auxiliary: Auxiliary elements to apply
+            auxiliary_config: Configuration for auxiliary elements
             width: Chart width
             height: Chart height
 
@@ -190,7 +193,8 @@ class ChartBuilder:
                         logger.warning("Unknown auxiliary element", element=aux_str)
 
                 if aux_elements:
-                    chart = template.apply_auxiliary(chart, aux_elements, data, mapping)  # type: ignore[assignment]
+                    # Pass auxiliary config if available (auxiliary_config parameter needs to be added to build method)
+                    chart = template.apply_auxiliary(chart, aux_elements, data, mapping, auxiliary_config)  # type: ignore[assignment]
 
             # Apply theme to final chart (base + auxiliary elements)
             pattern_id = self._extract_pattern_id(template_id)

@@ -99,15 +99,15 @@ class TestLineTemplate:
         color_encoding = chart_dict["encoding"]["color"]
         assert color_encoding["type"] == "nominal" or ":N" in color_encoding["field"]  # Nominal encoding for categories
 
-    def test_auxiliary_mean_line(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
-        """Test applying horizontal mean line auxiliary element."""
+    def test_auxiliary_target_line(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
+        """Test applying target line auxiliary element."""
         mapping = MappingConfig(x="x", y="y")
         chart = template.build(sample_numeric_data, mapping)
 
-        # Apply mean line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.MEAN_LINE], sample_numeric_data, mapping)
+        # Apply target line
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_data, mapping)
 
-        # Should return a layer chart with horizontal mean line
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_multiple_auxiliary_elements(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
@@ -117,7 +117,7 @@ class TestLineTemplate:
 
         # Apply multiple auxiliary elements
         chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE, AuxiliaryElement.MOVING_AVG], sample_numeric_data, mapping
+            chart, [AuxiliaryElement.TARGET_LINE, AuxiliaryElement.HIGHLIGHT], sample_numeric_data, mapping
         )
 
         # Should return a layer chart with both elements
@@ -128,11 +128,15 @@ class TestLineTemplate:
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Line charts should allow trend and reference lines
-        assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.MOVING_AVG in allowed
+        # Line charts should only allow target line and highlight
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.MEDIAN_LINE in allowed
+        assert AuxiliaryElement.HIGHLIGHT in allowed
+        # These should NOT be allowed anymore
+        assert AuxiliaryElement.MEAN_LINE not in allowed
+        assert AuxiliaryElement.MEDIAN_LINE not in allowed
+        assert AuxiliaryElement.MOVING_AVG not in allowed
+        assert AuxiliaryElement.THRESHOLD not in allowed
+        assert AuxiliaryElement.ANNOTATION not in allowed
 
     def test_no_zero_origin_required(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test that line charts don't enforce zero origin as per Visualization Policy."""

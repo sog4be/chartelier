@@ -126,6 +126,7 @@ class SmallMultiplesTemplate(BaseTemplate):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
+        element_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element specific to small multiples.
 
@@ -219,4 +220,4 @@ class SmallMultiplesTemplate(BaseTemplate):
             return alt.layer(band, chart)  # Band behind chart
 
         # Use base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)
+        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

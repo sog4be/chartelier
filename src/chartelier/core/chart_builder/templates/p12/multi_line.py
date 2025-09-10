@@ -91,12 +91,7 @@ class MultiLineTemplate(BaseTemplate):
             required_encodings=["x", "y", "color"],  # Color is required for multiple series
             optional_encodings=["strokeDash", "opacity"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
-                AuxiliaryElement.MEDIAN_LINE,
-                AuxiliaryElement.MOVING_AVG,
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
                 AuxiliaryElement.HIGHLIGHT,
             ],
         )
@@ -194,6 +189,7 @@ class MultiLineTemplate(BaseTemplate):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
+        element_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element specific to multi-line charts.
 
@@ -282,4 +278,4 @@ class MultiLineTemplate(BaseTemplate):
                 return alt.layer(chart, highlights)
 
         # Use base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)
+        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

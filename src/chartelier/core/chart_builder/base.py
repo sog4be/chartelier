@@ -123,6 +123,7 @@ class BaseTemplate(ABC):
         auxiliary: list[AuxiliaryElement],
         data: pl.DataFrame,
         mapping: MappingConfig,
+        auxiliary_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply auxiliary elements to chart.
 
@@ -131,15 +132,18 @@ class BaseTemplate(ABC):
             auxiliary: List of auxiliary elements to apply
             data: Input data frame
             mapping: Column mappings
+            auxiliary_config: Configuration for auxiliary elements
 
         Returns:
             Chart with auxiliary elements applied
         """
         # Filter to only allowed auxiliary elements
         allowed = [aux for aux in auxiliary if aux in self.spec.allowed_auxiliary]
+        config = auxiliary_config or {}
 
         for element in allowed[:3]:  # Max 3 auxiliary elements
-            chart = self._apply_single_auxiliary(chart, element, data, mapping)  # type: ignore[assignment]
+            element_config = config.get(element.value, {})
+            chart = self._apply_single_auxiliary(chart, element, data, mapping, element_config)  # type: ignore[assignment]
 
         return chart
 
@@ -149,6 +153,7 @@ class BaseTemplate(ABC):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
+        element_config: dict[str, Any] | None = None,  # noqa: ARG002
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element.
 
@@ -157,6 +162,7 @@ class BaseTemplate(ABC):
             element: Auxiliary element to apply
             data: Input data frame
             mapping: Column mappings
+            element_config: Configuration for the specific element
 
         Returns:
             Modified chart
@@ -525,4 +531,12 @@ class BaseTemplate(ABC):
             Dictionary in records format for Altair
         """
         # Convert to records format (list of dicts)
-        return {"values": data.to_dicts()}
+        records = data.to_dicts()
+
+        # Convert datetime objects to ISO format strings for JSON serialization
+        for record in records:
+            for key, value in record.items():
+                if hasattr(value, "isoformat"):
+                    record[key] = value.isoformat()
+
+        return {"values": records}
