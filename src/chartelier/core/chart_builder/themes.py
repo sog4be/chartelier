@@ -46,9 +46,7 @@ class Theme:
             .configure_axis(
                 domainColor=self.structural.AXIS_LINE,
                 domainWidth=1,
-                gridColor=self.structural.GRID_MAJOR,
-                gridOpacity=self.style.GRID_OPACITY,
-                gridWidth=self.style.GRID_LINE_WIDTH,
+                grid=False,  # Disable grid lines
                 labelColor=self.text.AXIS_LABEL,
                 labelFont=chartelier_fonts.get_font_string(),
                 labelFontSize=11,
@@ -64,7 +62,7 @@ class Theme:
                 labelAngle=0,  # Keep labels horizontal for readability
             )
             .configure_axisY(
-                gridDash=[],  # Solid grid lines
+                grid=False,  # Disable grid lines
             )
             .configure_legend(
                 labelColor=self.text.LEGEND,
@@ -78,7 +76,7 @@ class Theme:
             .configure_title(
                 color=self.text.TITLE,
                 font=chartelier_fonts.get_font_string(),
-                fontSize=14,
+                fontSize=18,  # Increased from 14 for better visibility
                 fontWeight="bold",
                 anchor="start",
             )
@@ -100,9 +98,7 @@ class Theme:
             "axis": {
                 "domainColor": self.structural.AXIS_LINE,
                 "domainWidth": 1,
-                "gridColor": self.structural.GRID_MAJOR,
-                "gridOpacity": self.style.GRID_OPACITY,
-                "gridWidth": self.style.GRID_LINE_WIDTH,
+                "grid": False,  # Disable grid lines
                 "labelColor": self.text.AXIS_LABEL,
                 "labelFont": chartelier_fonts.get_font_string(),
                 "labelFontSize": 11,
@@ -118,7 +114,7 @@ class Theme:
                 "labelAngle": 0,
             },
             "axisY": {
-                "gridDash": [],
+                "grid": False,  # Disable grid lines
             },
             "legend": {
                 "labelColor": self.text.LEGEND,
@@ -132,7 +128,7 @@ class Theme:
             "title": {
                 "color": self.text.TITLE,
                 "font": chartelier_fonts.get_font_string(),
-                "fontSize": 14,
+                "fontSize": 18,  # Increased from 14 for better visibility
                 "fontWeight": "bold",
                 "anchor": "start",
             },

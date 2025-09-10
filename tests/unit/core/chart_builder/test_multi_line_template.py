@@ -59,10 +59,10 @@ class TestMultiLineTemplate:
         chart = template.build(sample_multi_series_data, mapping)
 
         assert isinstance(chart, alt.Chart)
-        # Check mark type - should be line with points
+        # Check mark type - should be line without points (updated)
         chart_dict = chart.to_dict()
         assert chart_dict["mark"]["type"] == "line"
-        assert chart_dict["mark"]["point"] is True
+        assert chart_dict["mark"]["point"] is False  # No points by default
         # Check encodings
         assert "x" in chart_dict["encoding"]
         assert "y" in chart_dict["encoding"]

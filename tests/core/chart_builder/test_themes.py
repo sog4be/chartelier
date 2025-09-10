@@ -55,7 +55,7 @@ class TestTheme:
         # Check values
         assert config["background"] == theme.structural.BACKGROUND
         assert config["axis"]["domainColor"] == theme.structural.AXIS_LINE
-        assert config["axis"]["gridColor"] == theme.structural.GRID_MAJOR
+        assert config["axis"]["grid"] is False  # Grid is disabled
         assert config["legend"]["labelColor"] == theme.text.LEGEND
         assert config["title"]["color"] == theme.text.TITLE
 
@@ -84,8 +84,7 @@ class TestTheme:
 
         axis_config = config["axis"]
         assert axis_config["domainWidth"] == 1
-        assert axis_config["gridOpacity"] == theme.style.GRID_OPACITY
-        assert axis_config["gridWidth"] == theme.style.GRID_LINE_WIDTH
+        assert axis_config["grid"] is False  # Grid is disabled
         assert axis_config["labelFontSize"] == 11
         assert axis_config["titleFontSize"] == 12
         # Check font configuration
@@ -115,7 +114,7 @@ class TestTheme:
         config = theme.get_base_config()
 
         title_config = config["title"]
-        assert title_config["fontSize"] == 14
+        assert title_config["fontSize"] == 18  # Updated title size
         assert title_config["fontWeight"] == "bold"
         assert title_config["anchor"] == "start"
         # Check font configuration
