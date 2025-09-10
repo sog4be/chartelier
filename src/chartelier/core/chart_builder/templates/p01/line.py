@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -57,10 +57,14 @@ class LineTemplate(BaseTemplate):
         # Convert Polars DataFrame to Altair-compatible format
         chart_data = self.prepare_data_for_altair(data)
 
-        # Create base chart
+        # Get P01 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P01)
+
+        # Create base chart with primary color for single series
         chart = alt.Chart(chart_data).mark_line(
             point=True,  # Show points on the line
-            strokeWidth=2,
+            strokeWidth=pattern_colors.get("stroke_width", self.color_strategy.style.LINE_WIDTH_DEFAULT),
+            color=pattern_colors.get("primary", self.color_strategy.data.BASE),  # Use primary color for single series
         )
 
         # Build encodings

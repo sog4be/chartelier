@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -56,8 +56,14 @@ class BarTemplate(BaseTemplate):
         # Convert Polars DataFrame to Altair-compatible format
         chart_data = self.prepare_data_for_altair(data)
 
-        # Create base chart
-        chart = alt.Chart(chart_data).mark_bar()
+        # Get P02 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P02)
+
+        # Create base chart with primary color for single series
+        chart = alt.Chart(chart_data).mark_bar(
+            color=pattern_colors.get("primary", self.color_strategy.data.BASE),
+            opacity=pattern_colors.get("fill_opacity", self.color_strategy.style.BAR_FILL_OPACITY),
+        )
 
         # Build encodings
         encodings: dict[str, Any] = {}

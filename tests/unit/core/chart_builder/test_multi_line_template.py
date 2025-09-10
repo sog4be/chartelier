@@ -133,12 +133,15 @@ class TestMultiLineTemplate:
     def test_consistent_color_scheme(
         self, template: MultiLineTemplate, sample_numeric_multi_series_data: pl.DataFrame
     ) -> None:
-        """Test that consistent color scheme is used."""
+        """Test that color encoding is properly configured."""
         mapping = MappingConfig(x="x", y="y", color="group")
         chart = template.build(sample_numeric_multi_series_data, mapping)
 
         chart_dict = chart.to_dict()
         color_encoding = chart_dict["encoding"]["color"]
-        # Should use category10 color scheme for consistency
-        assert "scale" in color_encoding
-        assert color_encoding["scale"]["scheme"] == "category10"
+        # Should have color encoding with field and type specified
+        assert "field" in color_encoding
+        assert "type" in color_encoding
+        assert color_encoding["field"] == "group"
+        assert color_encoding["type"] == "nominal"
+        # Color scheme is now delegated to theme configuration

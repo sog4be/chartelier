@@ -91,7 +91,7 @@ class OverlayHistogramTemplate(BaseTemplate):
             encodings["color"] = alt.Color(
                 f"{mapping.color}:N",
                 title=mapping.color,
-                scale=alt.Scale(scheme="category10"),  # Use consistent color scheme
+                # Don't set scale here - let theme handle the color scheme
             )
             # Y-axis with stack=None for overlay effect (not stacked)
             encodings["y"] = alt.Y(
@@ -168,7 +168,7 @@ class OverlayHistogramTemplate(BaseTemplate):
                 )
                 .encode(
                     x="mean_value:Q",
-                    color=alt.Color(f"{mapping.color}:N", scale=alt.Scale(scheme="category10")),
+                    color=alt.Color(f"{mapping.color}:N"),
                     tooltip=[
                         alt.Tooltip(f"{mapping.color}:N", title="Category"),
                         alt.Tooltip("mean_value:Q", format=".2f", title="Mean"),
@@ -190,7 +190,7 @@ class OverlayHistogramTemplate(BaseTemplate):
                 )
                 .encode(
                     x="median_value:Q",
-                    color=alt.Color(f"{mapping.color}:N", scale=alt.Scale(scheme="category10")),
+                    color=alt.Color(f"{mapping.color}:N"),
                     tooltip=[
                         alt.Tooltip(f"{mapping.color}:N", title="Category"),
                         alt.Tooltip("median_value:Q", format=".2f", title="Median"),
