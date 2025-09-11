@@ -115,38 +115,16 @@ class TestHistogramTemplate:
         chart_dict = chart.to_dict()
         assert "color" in chart_dict["encoding"]
 
-    def test_auxiliary_mean_line(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
-        """Test applying vertical mean line auxiliary element."""
+    def test_auxiliary_target_line_not_applicable(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
+        """Test that target line doesn't apply to histograms (no y-axis mapping)."""
         mapping = MappingConfig(x="values")
         chart = template.build(sample_data, mapping)
 
-        # Apply mean line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.MEAN_LINE], sample_data, mapping)
+        # Apply target line - won't add anything since histograms don't have y mapping
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_data, mapping)
 
-        # Should return a layer chart with vertical mean line
-        assert isinstance(chart_with_aux, alt.LayerChart)
-
-    def test_auxiliary_median_line(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
-        """Test applying vertical median line auxiliary element."""
-        mapping = MappingConfig(x="values")
-        chart = template.build(sample_data, mapping)
-
-        # Apply median line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.MEDIAN_LINE], sample_data, mapping)
-
-        # Should return a layer chart with vertical median line
-        assert isinstance(chart_with_aux, alt.LayerChart)
-
-    def test_auxiliary_threshold_band(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
-        """Test applying vertical threshold band auxiliary element."""
-        mapping = MappingConfig(x="values")
-        chart = template.build(sample_data, mapping)
-
-        # Apply threshold band
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.THRESHOLD], sample_data, mapping)
-
-        # Should return a layer chart with vertical threshold band
-        assert isinstance(chart_with_aux, alt.LayerChart)
+        # Should return the original chart since target line requires y mapping
+        assert isinstance(chart_with_aux, alt.Chart)
 
     def test_zero_origin_enforced(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
         """Test that histogram Y-axis starts at zero as per Visualization Policy."""

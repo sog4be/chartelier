@@ -59,10 +59,10 @@ class TestMultiLineTemplate:
         chart = template.build(sample_multi_series_data, mapping)
 
         assert isinstance(chart, alt.Chart)
-        # Check mark type - should be line with points
+        # Check mark type - should be line without points (updated)
         chart_dict = chart.to_dict()
         assert chart_dict["mark"]["type"] == "line"
-        assert chart_dict["mark"]["point"] is True
+        assert chart_dict["mark"]["point"] is False  # No points by default
         # Check encodings
         assert "x" in chart_dict["encoding"]
         assert "y" in chart_dict["encoding"]
@@ -90,31 +90,29 @@ class TestMultiLineTemplate:
         color_encoding = chart_dict["encoding"]["color"]
         assert color_encoding["type"] == "nominal" or ":N" in color_encoding["field"]
 
-    def test_auxiliary_mean_line_per_series(
+    def test_auxiliary_target_line(
         self, template: MultiLineTemplate, sample_numeric_multi_series_data: pl.DataFrame
     ) -> None:
-        """Test applying mean line auxiliary element per series."""
+        """Test applying target line auxiliary element."""
         mapping = MappingConfig(x="x", y="y", color="group")
         chart = template.build(sample_numeric_multi_series_data, mapping)
 
-        # Apply mean line - should compute per series
+        # Apply target line
         chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE], sample_numeric_multi_series_data, mapping
+            chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_multi_series_data, mapping
         )
 
-        # Should return a layer chart with mean lines per series
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: MultiLineTemplate) -> None:
-        """Test that multi-line chart allows appropriate auxiliary elements."""
+        """Test that multi-line chart allows only target line auxiliary element."""
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Multi-line charts should allow trend and reference lines
-        assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.MOVING_AVG in allowed
+        # Multi-line charts should only allow target line
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.MEDIAN_LINE in allowed
+        assert len(allowed) == 1  # Only one auxiliary element allowed
 
     def test_mapping_validation(self, template: MultiLineTemplate) -> None:
         """Test mapping validation for required encodings."""

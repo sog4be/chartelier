@@ -27,10 +27,7 @@ class HistogramTemplate(BaseTemplate):
             required_encodings=["x"],
             optional_encodings=["color", "opacity"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
-                AuxiliaryElement.MEDIAN_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
+                AuxiliaryElement.TARGET_LINE,
             ],
         )
 
@@ -126,84 +123,3 @@ class HistogramTemplate(BaseTemplate):
         bin_count = math.ceil(math.log2(n) + 1)
         # Limit bins to reasonable range
         return max(5, min(bin_count, 50))
-
-    def _apply_single_auxiliary(
-        self,
-        chart: alt.Chart,
-        element: AuxiliaryElement,
-        data: pl.DataFrame,
-        mapping: MappingConfig,
-    ) -> alt.Chart | alt.LayerChart:
-        """Apply a single auxiliary element specific to histograms.
-
-        Args:
-            chart: Chart to modify
-            element: Auxiliary element to apply
-            data: Input data frame
-            mapping: Column mappings
-
-        Returns:
-            Modified chart
-        """
-        # For histograms, mean and median lines should be vertical
-        if element == AuxiliaryElement.MEAN_LINE and mapping.x:
-            mean_val = data[mapping.x].mean()
-            if mean_val is not None:
-                rule = (
-                    alt.Chart(pl.DataFrame({"mean": [mean_val]}))
-                    .mark_rule(
-                        color="red",
-                        strokeDash=[5, 5],
-                        strokeWidth=2,
-                    )
-                    .encode(
-                        x="mean:Q",
-                        tooltip=alt.Tooltip("mean:Q", format=".2f", title="Mean"),
-                    )
-                )
-                return alt.layer(chart, rule)
-
-        elif element == AuxiliaryElement.MEDIAN_LINE and mapping.x:
-            median_val = data[mapping.x].median()
-            if median_val is not None:
-                rule = (
-                    alt.Chart(pl.DataFrame({"median": [median_val]}))
-                    .mark_rule(
-                        color="blue",
-                        strokeDash=[5, 5],
-                        strokeWidth=2,
-                    )
-                    .encode(
-                        x="median:Q",
-                        tooltip=alt.Tooltip("median:Q", format=".2f", title="Median"),
-                    )
-                )
-                return alt.layer(chart, rule)
-
-        elif element == AuxiliaryElement.THRESHOLD and mapping.x:
-            # Show threshold bands as vertical regions
-            # Placeholder values - would come from auxiliary config
-            lower_threshold = 0
-            upper_threshold = 100
-            band = (
-                alt.Chart(
-                    pl.DataFrame(
-                        {
-                            "lower": [lower_threshold],
-                            "upper": [upper_threshold],
-                        }
-                    )
-                )
-                .mark_rect(
-                    opacity=0.15,
-                    color="green",
-                )
-                .encode(
-                    x=alt.X("lower:Q"),
-                    x2=alt.X2("upper:Q"),
-                )
-            )
-            return alt.layer(band, chart)  # Band behind histogram
-
-        # Default to base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)

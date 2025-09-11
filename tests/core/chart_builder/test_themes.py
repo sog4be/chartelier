@@ -55,7 +55,7 @@ class TestTheme:
         # Check values
         assert config["background"] == theme.structural.BACKGROUND
         assert config["axis"]["domainColor"] == theme.structural.AXIS_LINE
-        assert config["axis"]["gridColor"] == theme.structural.GRID_MAJOR
+        assert config["axis"]["grid"] is False  # Grid is disabled
         assert config["legend"]["labelColor"] == theme.text.LEGEND
         assert config["title"]["color"] == theme.text.TITLE
 
@@ -84,10 +84,9 @@ class TestTheme:
 
         axis_config = config["axis"]
         assert axis_config["domainWidth"] == 1
-        assert axis_config["gridOpacity"] == theme.style.GRID_OPACITY
-        assert axis_config["gridWidth"] == theme.style.GRID_LINE_WIDTH
-        assert axis_config["labelFontSize"] == 11
-        assert axis_config["titleFontSize"] == 12
+        assert axis_config["grid"] is False  # Grid is disabled
+        assert axis_config["labelFontSize"] == 14  # Increased for 300dpi
+        assert axis_config["titleFontSize"] == 16  # Increased for 300dpi
         # Check font configuration
         assert "labelFont" in axis_config
         assert "titleFont" in axis_config
@@ -100,9 +99,10 @@ class TestTheme:
         config = theme.get_base_config()
 
         legend_config = config["legend"]
-        assert legend_config["labelFontSize"] == 11
-        assert legend_config["titleFontSize"] == 12
-        assert legend_config["orient"] == "top-right"
+        assert legend_config["labelFontSize"] == 14  # Increased for 300dpi
+        assert legend_config["titleFontSize"] == 16  # Increased for 300dpi
+        assert legend_config["orient"] == "right"
+        assert legend_config["offset"] == 20
         # Check font configuration
         assert "labelFont" in legend_config
         assert "titleFont" in legend_config
@@ -115,8 +115,8 @@ class TestTheme:
         config = theme.get_base_config()
 
         title_config = config["title"]
-        assert title_config["fontSize"] == 14
-        assert title_config["fontWeight"] == "bold"
+        assert title_config["fontSize"] == 22  # Increased for 300dpi
+        assert title_config["fontWeight"] == 600  # Semi-bold weight
         assert title_config["anchor"] == "start"
         # Check font configuration
         assert "font" in title_config

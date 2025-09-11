@@ -26,12 +26,7 @@ class BarTemplate(BaseTemplate):
             required_encodings=["x", "y"],
             optional_encodings=["color", "opacity"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
-                AuxiliaryElement.MEDIAN_LINE,
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
-                AuxiliaryElement.HIGHLIGHT,
             ],
         )
 
@@ -111,24 +106,3 @@ class BarTemplate(BaseTemplate):
         )
 
         return chart  # type: ignore[no-any-return]  # noqa: RET504 — Altair type inference
-
-    def _apply_single_auxiliary(
-        self,
-        chart: alt.Chart,
-        element: AuxiliaryElement,
-        data: pl.DataFrame,
-        mapping: MappingConfig,
-    ) -> alt.Chart | alt.LayerChart:
-        """Apply a single auxiliary element specific to bar charts.
-
-        Args:
-            chart: Chart to modify
-            element: Auxiliary element to apply
-            data: Input data frame
-            mapping: Column mappings
-
-        Returns:
-            Modified chart
-        """
-        # Use base implementation for all auxiliary elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)

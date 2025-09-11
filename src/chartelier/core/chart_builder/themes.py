@@ -46,40 +46,39 @@ class Theme:
             .configure_axis(
                 domainColor=self.structural.AXIS_LINE,
                 domainWidth=1,
-                gridColor=self.structural.GRID_MAJOR,
-                gridOpacity=self.style.GRID_OPACITY,
-                gridWidth=self.style.GRID_LINE_WIDTH,
+                grid=False,  # Disable grid lines
                 labelColor=self.text.AXIS_LABEL,
                 labelFont=chartelier_fonts.get_font_string(),
-                labelFontSize=11,
+                labelFontSize=14,  # Increased for 300dpi readability
                 tickColor=self.structural.TICK_LINE,
                 tickSize=5,
                 tickWidth=1,
                 titleColor=self.text.AXIS_LABEL,
                 titleFont=chartelier_fonts.get_font_string(),
-                titleFontSize=12,
+                titleFontSize=16,  # Increased for 300dpi readability
                 titleFontWeight="normal",
             )
             .configure_axisX(
                 labelAngle=0,  # Keep labels horizontal for readability
             )
             .configure_axisY(
-                gridDash=[],  # Solid grid lines
+                grid=False,  # Disable grid lines
             )
             .configure_legend(
                 labelColor=self.text.LEGEND,
                 labelFont=chartelier_fonts.get_font_string(),
-                labelFontSize=11,
+                labelFontSize=14,  # Increased for 300dpi readability
                 titleColor=self.text.LEGEND,
                 titleFont=chartelier_fonts.get_font_string(),
-                titleFontSize=12,
-                orient="top-right",  # Default to top-right to avoid axis overlap
+                titleFontSize=16,  # Increased for 300dpi readability
+                orient="right",  # Place legend outside chart area on the right
+                offset=20,  # Add spacing from the chart area
             )
             .configure_title(
                 color=self.text.TITLE,
                 font=chartelier_fonts.get_font_string(),
-                fontSize=14,
-                fontWeight="bold",
+                fontSize=22,  # Increased for 300dpi readability
+                fontWeight=600,  # Semi-bold instead of bold for better balance
                 anchor="start",
             )
             .configure_view(
@@ -100,40 +99,39 @@ class Theme:
             "axis": {
                 "domainColor": self.structural.AXIS_LINE,
                 "domainWidth": 1,
-                "gridColor": self.structural.GRID_MAJOR,
-                "gridOpacity": self.style.GRID_OPACITY,
-                "gridWidth": self.style.GRID_LINE_WIDTH,
+                "grid": False,  # Disable grid lines
                 "labelColor": self.text.AXIS_LABEL,
                 "labelFont": chartelier_fonts.get_font_string(),
-                "labelFontSize": 11,
+                "labelFontSize": 14,  # Increased for 300dpi readability
                 "tickColor": self.structural.TICK_LINE,
                 "tickSize": 5,
                 "tickWidth": 1,
                 "titleColor": self.text.AXIS_LABEL,
                 "titleFont": chartelier_fonts.get_font_string(),
-                "titleFontSize": 12,
+                "titleFontSize": 16,  # Increased for 300dpi readability
                 "titleFontWeight": "normal",
             },
             "axisX": {
                 "labelAngle": 0,
             },
             "axisY": {
-                "gridDash": [],
+                "grid": False,  # Disable grid lines
             },
             "legend": {
                 "labelColor": self.text.LEGEND,
                 "labelFont": chartelier_fonts.get_font_string(),
-                "labelFontSize": 11,
+                "labelFontSize": 14,  # Increased for 300dpi readability
                 "titleColor": self.text.LEGEND,
                 "titleFont": chartelier_fonts.get_font_string(),
-                "titleFontSize": 12,
-                "orient": "top-right",
+                "titleFontSize": 16,  # Increased for 300dpi readability
+                "orient": "right",
+                "offset": 20,
             },
             "title": {
                 "color": self.text.TITLE,
                 "font": chartelier_fonts.get_font_string(),
-                "fontSize": 14,
-                "fontWeight": "bold",
+                "fontSize": 22,  # Increased for 300dpi readability
+                "fontWeight": 600,  # Semi-bold instead of bold for better balance
                 "anchor": "start",
             },
             "view": {

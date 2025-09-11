@@ -92,7 +92,7 @@ class TestBarTemplate:
         chart = template.build(sample_data, mapping)
 
         # Apply mean line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.MEAN_LINE], sample_data, mapping)
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_data, mapping)
 
         # Should return a layer chart with mean line
         assert isinstance(chart_with_aux, alt.LayerChart)
@@ -103,7 +103,7 @@ class TestBarTemplate:
         chart = template.build(sample_data, mapping)
 
         # Apply threshold band
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.THRESHOLD], sample_data, mapping)
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_data, mapping)
 
         # Should return a layer chart with threshold band
         assert isinstance(chart_with_aux, alt.LayerChart)

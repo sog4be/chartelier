@@ -169,7 +169,7 @@ class TestChartMetadata:
             pattern_id=PatternID.P12,
             template_id="multi_line",
             mapping=mapping,
-            auxiliary=[AuxiliaryElement.REGRESSION, AuxiliaryElement.ANNOTATION],
+            auxiliary=[AuxiliaryElement.TARGET_LINE],
             operations_applied=["groupby", "sort"],
             decisions={"pattern_reasoning": "Time series with multiple categories"},
             warnings=["Data was sampled to 10000 rows"],
@@ -177,8 +177,8 @@ class TestChartMetadata:
             versions=VersionInfo(api="0.2.1"),
             fallback_applied=True,
         )
-        assert len(metadata.auxiliary) == 2
-        assert AuxiliaryElement.REGRESSION in metadata.auxiliary
+        assert len(metadata.auxiliary) == 1
+        assert AuxiliaryElement.TARGET_LINE in metadata.auxiliary
         assert metadata.fallback_applied is True
         assert metadata.versions.api == "0.2.1"
 
@@ -262,12 +262,12 @@ class TestChartSelection:
         """Test chart selection creation."""
         selection = ChartSelection(
             template_id="line",
-            auxiliary=[AuxiliaryElement.MEAN_LINE, AuxiliaryElement.THRESHOLD],
+            auxiliary=[AuxiliaryElement.TARGET_LINE],
             reasoning="Time series with reference lines",
         )
         assert selection.template_id == "line"
-        assert len(selection.auxiliary) == 2
-        assert AuxiliaryElement.MEAN_LINE in selection.auxiliary
+        assert len(selection.auxiliary) == 1
+        assert AuxiliaryElement.TARGET_LINE in selection.auxiliary
 
 
 class TestProcessedData:

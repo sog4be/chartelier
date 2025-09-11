@@ -59,10 +59,10 @@ class TestLineTemplate:
         chart = template.build(sample_numeric_data, mapping)
 
         assert isinstance(chart, alt.Chart)
-        # Check mark type - should be line with points
+        # Check mark type - should be line without points (updated)
         chart_dict = chart.to_dict()
         assert chart_dict["mark"]["type"] == "line"
-        assert chart_dict["mark"]["point"] is True
+        assert chart_dict["mark"]["point"] is False  # No points by default
         # Check encodings
         assert "x" in chart_dict["encoding"]
         assert "y" in chart_dict["encoding"]
@@ -99,40 +99,36 @@ class TestLineTemplate:
         color_encoding = chart_dict["encoding"]["color"]
         assert color_encoding["type"] == "nominal" or ":N" in color_encoding["field"]  # Nominal encoding for categories
 
-    def test_auxiliary_mean_line(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
-        """Test applying horizontal mean line auxiliary element."""
+    def test_auxiliary_target_line(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
+        """Test applying target line auxiliary element."""
         mapping = MappingConfig(x="x", y="y")
         chart = template.build(sample_numeric_data, mapping)
 
-        # Apply mean line
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.MEAN_LINE], sample_numeric_data, mapping)
+        # Apply target line
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_data, mapping)
 
-        # Should return a layer chart with horizontal mean line
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-    def test_multiple_auxiliary_elements(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
-        """Test applying multiple auxiliary elements."""
+    def test_auxiliary_target_line_only(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
+        """Test that only target line auxiliary element is supported."""
         mapping = MappingConfig(x="x", y="y")
         chart = template.build(sample_numeric_data, mapping)
 
-        # Apply multiple auxiliary elements
-        chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE, AuxiliaryElement.MOVING_AVG], sample_numeric_data, mapping
-        )
+        # Apply target line (the only supported auxiliary element)
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_data, mapping)
 
-        # Should return a layer chart with both elements
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: LineTemplate) -> None:
-        """Test that line chart allows appropriate auxiliary elements."""
+        """Test that line chart allows only target line auxiliary element."""
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Line charts should allow trend and reference lines
-        assert AuxiliaryElement.MEAN_LINE in allowed
-        assert AuxiliaryElement.MOVING_AVG in allowed
+        # Line charts should only allow target line
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.MEDIAN_LINE in allowed
+        assert len(allowed) == 1  # Only one auxiliary element allowed
 
     def test_no_zero_origin_required(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test that line charts don't enforce zero origin as per Visualization Policy."""

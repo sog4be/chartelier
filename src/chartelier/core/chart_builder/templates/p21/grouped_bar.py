@@ -26,12 +26,7 @@ class GroupedBarTemplate(BaseTemplate):
             required_encodings=["x", "y", "color"],  # x for time/categories, y for values, color for grouping
             optional_encodings=["opacity"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
-                AuxiliaryElement.MEDIAN_LINE,
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
-                AuxiliaryElement.HIGHLIGHT,
             ],
         )
 
@@ -108,78 +103,3 @@ class GroupedBarTemplate(BaseTemplate):
         )
 
         return chart  # type: ignore[no-any-return]  # noqa: RET504 — Altair type inference
-
-    def _apply_single_auxiliary(
-        self,
-        chart: alt.Chart,
-        element: AuxiliaryElement,
-        data: pl.DataFrame,
-        mapping: MappingConfig,
-    ) -> alt.Chart | alt.LayerChart:
-        """Apply a single auxiliary element specific to grouped bar charts.
-
-        Args:
-            chart: Chart to modify
-            element: Auxiliary element to apply
-            data: Input data frame
-            mapping: Column mappings
-
-        Returns:
-            Modified chart
-        """
-        # For grouped bars, use simple horizontal lines that work with layering
-        if element == AuxiliaryElement.MEAN_LINE and mapping.y:
-            # Calculate overall mean across all groups
-            overall_mean = data[mapping.y].mean()
-            if overall_mean is not None:
-                rule = (
-                    alt.Chart(pl.DataFrame({"mean": [overall_mean]}))
-                    .mark_rule(
-                        color="red",
-                        strokeDash=[5, 5],
-                        strokeWidth=2,
-                    )
-                    .encode(y="mean:Q", tooltip=alt.Tooltip("mean:Q", format=".2f", title="Overall Mean"))
-                )
-                return alt.layer(chart, rule)
-
-        if element == AuxiliaryElement.TARGET_LINE and mapping.y:
-            # For grouped bar charts, target line should be horizontal across all groups
-            target_value = 0  # Placeholder - would come from auxiliary config
-            rule = (
-                alt.Chart(pl.DataFrame({"target": [target_value]}))
-                .mark_rule(
-                    color="green",
-                    strokeDash=[10, 5],
-                    strokeWidth=2,
-                )
-                .encode(y="target:Q", tooltip=alt.Tooltip("target:Q", title="Target"))
-            )
-            return alt.layer(chart, rule)
-
-        if element == AuxiliaryElement.THRESHOLD and mapping.y:
-            # Threshold band for acceptable range across all groups
-            lower_threshold = -10  # Placeholder values
-            upper_threshold = 10
-            band = (
-                alt.Chart(
-                    pl.DataFrame(
-                        {
-                            "lower": [lower_threshold],
-                            "upper": [upper_threshold],
-                        }
-                    )
-                )
-                .mark_rect(
-                    opacity=0.2,
-                    color="gray",
-                )
-                .encode(
-                    y=alt.Y("lower:Q"),
-                    y2=alt.Y2("upper:Q"),
-                )
-            )
-            return alt.layer(band, chart)  # Band behind bars
-
-        # Use base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping)
