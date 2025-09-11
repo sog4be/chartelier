@@ -71,7 +71,8 @@ class Theme:
                 titleColor=self.text.LEGEND,
                 titleFont=chartelier_fonts.get_font_string(),
                 titleFontSize=16,  # Increased for 300dpi readability
-                orient="top-right",  # Default to top-right to avoid axis overlap
+                orient="right",  # Place legend outside chart area on the right
+                offset=20,  # Add spacing from the chart area
             )
             .configure_title(
                 color=self.text.TITLE,
@@ -123,7 +124,8 @@ class Theme:
                 "titleColor": self.text.LEGEND,
                 "titleFont": chartelier_fonts.get_font_string(),
                 "titleFontSize": 16,  # Increased for 300dpi readability
-                "orient": "top-right",
+                "orient": "right",
+                "offset": 20,
             },
             "title": {
                 "color": self.text.TITLE,

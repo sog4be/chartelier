@@ -101,7 +101,8 @@ class TestTheme:
         legend_config = config["legend"]
         assert legend_config["labelFontSize"] == 14  # Increased for 300dpi
         assert legend_config["titleFontSize"] == 16  # Increased for 300dpi
-        assert legend_config["orient"] == "top-right"
+        assert legend_config["orient"] == "right"
+        assert legend_config["offset"] == 20
         # Check font configuration
         assert "labelFont" in legend_config
         assert "titleFont" in legend_config
