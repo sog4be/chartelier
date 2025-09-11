@@ -7,6 +7,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
+from chartelier.core.enums import PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -53,8 +54,16 @@ class FacetHistogramTemplate(BaseTemplate):
         n_rows = len(data)
         bin_count = self._calculate_bin_count(n_rows)
 
+        # Get P13 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P13)
+
         # Create base chart with binning
-        chart = alt.Chart(chart_data).mark_bar()
+        # Use the first color from CHARTELIER_QUAL_10 palette as default
+        default_color = self.color_strategy.data.CHARTELIER_QUAL_10[0]
+        chart = alt.Chart(chart_data).mark_bar(
+            color=default_color,
+            fillOpacity=pattern_colors.get("fill_opacity", 0.9),
+        )
 
         # Build encodings
         encodings: dict[str, Any] = {}
@@ -102,7 +111,15 @@ class FacetHistogramTemplate(BaseTemplate):
 
         # Optional encodings
         if mapping.color:
-            encodings["color"] = alt.Color(f"{mapping.color}:N", title=mapping.color)
+            # Apply custom color scheme from pattern colors
+            if "custom_range" in pattern_colors:
+                encodings["color"] = alt.Color(
+                    f"{mapping.color}:N",
+                    title=mapping.color,
+                    scale=alt.Scale(range=pattern_colors["custom_range"]),
+                )
+            else:
+                encodings["color"] = alt.Color(f"{mapping.color}:N", title=mapping.color)
 
         # Apply encodings
         chart = chart.encode(**encodings)

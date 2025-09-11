@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -51,10 +51,14 @@ class SmallMultiplesTemplate(BaseTemplate):
         # Convert Polars DataFrame to Altair-compatible format
         chart_data = self.prepare_data_for_altair(data)
 
+        # Get P31 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P31)
+        series_count = data[mapping.color].n_unique() if mapping.color and mapping.color in data.columns else 1
+
         # Create base chart - using line with points for time series
         chart = alt.Chart(chart_data).mark_line(
             point=True,
-            strokeWidth=2,
+            strokeWidth=pattern_colors.get("stroke_width", 2),
         )
 
         # Build encodings
@@ -98,7 +102,14 @@ class SmallMultiplesTemplate(BaseTemplate):
 
         # Optional encodings
         if mapping.color:
-            encodings["color"] = alt.Color(f"{mapping.color}:N", title=mapping.color)
+            # Apply custom color scheme for small multiples
+            # Since P31 doesn't have a custom scheme defined in colors.py,
+            # we'll use CHARTELIER_QUAL_10 for consistency
+            encodings["color"] = alt.Color(
+                f"{mapping.color}:N",
+                title=mapping.color,
+                scale=alt.Scale(range=list(self.color_strategy.data.CHARTELIER_QUAL_10[:series_count])),
+            )
 
         # Apply encodings
         chart = chart.encode(**encodings)
