@@ -55,9 +55,7 @@ class TestChartSelector:
         # Setup get_template_spec
         mock_spec = MagicMock()
         mock_spec.allowed_auxiliary = [
-            AuxiliaryElement.MEAN_LINE,
-            AuxiliaryElement.REGRESSION,
-            AuxiliaryElement.ANNOTATION,
+            AuxiliaryElement.TARGET_LINE,
         ]
         mock.get_template_spec.return_value = mock_spec
 
@@ -121,35 +119,36 @@ class TestChartSelector:
         # Test successful selection
         mock_response = json.dumps(
             {
-                "auxiliary": ["mean_line", "regression"],
-                "reasoning": "Mean line and regression show trend",
+                "auxiliary": ["target_line"],
+                "reasoning": "Target line shows goal",
             }
         )
         mock_client = MockLLMClient(default_response=mock_response)
         selector = ChartSelector(llm_client=mock_client, chart_builder=mock_chart_builder)
 
-        result = selector.select_auxiliary("P01_line", "Show trend with average", sample_metadata)
-        assert len(result) == 2
-        assert "mean_line" in result
-        assert "regression" in result
+        result = selector.select_auxiliary("P01_line", "Show trend with target", sample_metadata)
+        assert len(result) == 1
+        assert "target_line" in result
 
-        # Test max 3 elements constraint
+        # Test max 3 elements constraint (even though we only have 1 element now)
         mock_response = json.dumps(
             {
-                "auxiliary": ["mean_line", "regression", "annotation", "median_line", "target_line"],
+                "auxiliary": ["target_line", "target_line", "target_line", "target_line"],
                 "reasoning": "Multiple elements",
             }
         )
         mock_client = MockLLMClient(default_response=mock_response)
         selector = ChartSelector(llm_client=mock_client, chart_builder=mock_chart_builder)
 
-        result = selector.select_auxiliary("P01_line", "Add many annotations")
-        assert len(result) <= 3  # Should be limited to max 3
+        result = selector.select_auxiliary("P01_line", "Add many targets")
+        # Should remove duplicates and limit to max 3
+        assert len(result) <= 3
+        assert len(set(result)) == len(result)  # No duplicates
 
         # Test filtering invalid elements
         mock_response = json.dumps(
             {
-                "auxiliary": ["mean_line", "invalid_element", "regression"],
+                "auxiliary": ["target_line", "invalid_element", "mean_line"],
                 "reasoning": "Some invalid",
             }
         )
@@ -158,8 +157,8 @@ class TestChartSelector:
 
         result = selector.select_auxiliary("P01_line", "Add elements")
         assert "invalid_element" not in result
-        assert "mean_line" in result
-        assert "regression" in result
+        assert "mean_line" not in result  # Not in allowed list anymore
+        assert "target_line" in result
 
     def test_single_chart_option(self, sample_metadata: DataMetadata, mock_chart_builder: Mock) -> None:
         """Test behavior when only one chart option is available."""
@@ -279,15 +278,13 @@ class TestChartSelector:
         """Test auxiliary element descriptions."""
         selector = ChartSelector(llm_client=MockLLMClient())
 
-        # Test known elements
-        desc = selector._get_auxiliary_description(AuxiliaryElement.MEAN_LINE)  # noqa: SLF001
-        assert "average" in desc.lower()
-
-        desc = selector._get_auxiliary_description(AuxiliaryElement.REGRESSION)  # noqa: SLF001
-        assert "trend" in desc.lower()
+        # Test target_line element
+        desc = selector._get_auxiliary_description(AuxiliaryElement.TARGET_LINE)  # noqa: SLF001
+        assert "target" in desc.lower() or "goal" in desc.lower()
 
         # Test that all auxiliary elements have descriptions
         for element in AuxiliaryElement:
             desc = selector._get_auxiliary_description(element)  # noqa: SLF001
             # Should return non-empty string for known elements
             assert isinstance(desc, str)
+            assert len(desc) > 0  # Should have a description

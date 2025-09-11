@@ -321,9 +321,17 @@ class ChartSelector:
             data = json.loads(response.content)
             selected = data.get("auxiliary", [])
 
-            # Validate and limit to max elements
+            # Validate, remove duplicates, and limit to max elements
             valid_ids = [elem.value for elem in allowed_auxiliary]
             selected = [aid for aid in selected if aid in valid_ids]
+            # Remove duplicates while preserving order
+            seen: set[str] = set()
+            unique_selected = []
+            for item in selected:
+                if item not in seen:
+                    seen.add(item)
+                    unique_selected.append(item)
+            selected = unique_selected
             selected = selected[: self.MAX_AUXILIARY_ELEMENTS]
 
             self.logger.info(
@@ -415,15 +423,6 @@ class ChartSelector:
             Description string
         """
         descriptions = {
-            AuxiliaryElement.HIGHLIGHT: "Emphasize specific data points or series",
-            AuxiliaryElement.ANNOTATION: "Add explanatory text to data points",
-            AuxiliaryElement.COLOR_CODING: "Apply conditional colors based on values",
-            AuxiliaryElement.MEAN_LINE: "Show average value reference line",
-            AuxiliaryElement.MEDIAN_LINE: "Show median value reference line",
             AuxiliaryElement.TARGET_LINE: "Display target or goal reference line",
-            AuxiliaryElement.THRESHOLD: "Show acceptable range boundaries",
-            AuxiliaryElement.REGRESSION: "Add trend line to show correlation",
-            AuxiliaryElement.MOVING_AVG: "Smooth short-term fluctuations",
-            AuxiliaryElement.FORECAST: "Project future values with dotted line",
         }
         return descriptions.get(element, "")

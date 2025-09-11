@@ -75,18 +75,5 @@ class PipelinePhase(str, Enum):
 class AuxiliaryElement(str, Enum):
     """Available auxiliary visual elements for charts."""
 
-    # Data emphasis
-    HIGHLIGHT = "highlight"
-    ANNOTATION = "annotation"
-    COLOR_CODING = "color_coding"
-
     # Reference lines
-    MEAN_LINE = "mean_line"
-    MEDIAN_LINE = "median_line"
     TARGET_LINE = "target_line"
-    THRESHOLD = "threshold"
-
-    # Trend display
-    REGRESSION = "regression"
-    MOVING_AVG = "moving_avg"
-    FORECAST = "forecast"
