@@ -324,10 +324,10 @@ class Coordinator:
                     context.parsed_data = pl.DataFrame(data)
                 else:
                     msg = f"Unsupported JSON structure: {type(data)}"
-                    raise ValueError(msg)
+                    raise ValueError(msg)  # noqa: TRY301
             else:
                 msg = f"Unsupported data format: {context.data_format}"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301
 
             # Store basic stats
             if context.parsed_data is not None:
