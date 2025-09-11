@@ -120,6 +120,14 @@ ignore = [
     "A004",    # Import shadows builtin (SystemError, TimeoutError are needed)
 ]
 "docs/**/*.py" = ["ALL"]
+"colab/**/*.py" = [
+    "T201",    # Allow print statements (needed for Colab output)
+    "ANN",     # Type annotations not required for scripts
+    "D",       # Docstring rules relaxed for scripts
+    "S607",    # Allow subprocess with partial path (python)
+    "ARG001",  # Allow unused arguments (signal handlers)
+]
+"colab/**/*.ipynb" = ["ALL"]  # Notebooks have different rules
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

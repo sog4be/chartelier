@@ -52,6 +52,7 @@ class LLMSettings(BaseSettings):
     )
 
     api_key: str | None = Field(None, description="API key for LLM service")
+    api_base: str | None = Field(None, description="Custom API base URL (for vLLM, Ollama, etc.)")
     model: str = Field("gpt-5-mini", description="Default model to use")
     timeout: int = Field(10, description="Request timeout in seconds")
     max_retries: int = Field(3, description="Maximum number of retries")
@@ -256,6 +257,14 @@ class LiteLLMClient(BaseLLMClient):
 
         if self.settings.api_key:
             request_kwargs["api_key"] = self.settings.api_key
+
+        # Add custom base URL support for vLLM, Ollama, etc.
+        if self.settings.api_base:
+            request_kwargs["api_base"] = self.settings.api_base
+            # For local deployments, we might need to adjust the model name
+            if ("localhost" in self.settings.api_base or "127.0.0.1" in self.settings.api_base) and "/" not in model:
+                # If it's just a model name without org, keep it as is
+                request_kwargs["model"] = model
 
         if response_format == ResponseFormat.JSON:
             request_kwargs["response_format"] = {"type": "json_object"}
