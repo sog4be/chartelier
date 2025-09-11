@@ -36,22 +36,58 @@ def install_dependencies():
     """Install required dependencies for GPT-OSS-20B."""
     print("\n📦 Installing dependencies...")
 
-    # Core dependencies
-    dependencies = [
-        "torch",  # PyTorch for GPU support
-        "vllm==0.7.0",  # vLLM for serving (using stable version)
+    # Pre-install specific numpy version to avoid conflicts
+    print("   Installing numpy<2.0...")
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "numpy<2.0"],
+        check=False,
+    )
+
+    # Core dependencies for vLLM
+    vllm_deps = [
+        "fastapi",  # For API server
+        "nest-asyncio",  # For async operations in Jupyter
+        "uvicorn",  # ASGI server
+        "ray",  # For distributed inference
+    ]
+
+    for dep in vllm_deps:
+        print(f"   Installing {dep}...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", dep],
+            check=False,
+        )
+
+    # Install vLLM (latest version compatible with Colab)
+    print("   Installing vLLM (this may take a few minutes)...")
+    # Try latest version first, fall back to specific version if needed
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "vllm"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        print("   ⚠️  Latest vLLM failed, trying compatible version...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "vllm==0.6.5"],
+            check=False,
+        )
+
+    # Additional dependencies
+    other_deps = [
         "transformers>=4.40.0",  # For tokenizer
         "accelerate",  # For model loading
         "sentencepiece",  # For tokenization
         "protobuf",  # For model serialization
-        "numpy<2.0",  # Compatibility
     ]
 
-    for dep in dependencies:
+    for dep in other_deps:
         print(f"   Installing {dep}...")
         subprocess.run(
             [sys.executable, "-m", "pip", "install", "-q", dep],
-            check=False,  # Continue even if some fail
+            check=False,
         )
 
     # Install Chartelier dependencies

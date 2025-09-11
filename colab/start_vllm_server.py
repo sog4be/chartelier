@@ -61,25 +61,28 @@ async def start_vllm_server():
         "--port",
         str(port),
         "--dtype",
-        "auto",  # Let vLLM choose optimal dtype
+        "half",  # Use float16 for better compatibility
         "--max-model-len",
-        "8192",  # Reasonable context for testing
+        "4096",  # Start with smaller context for stability
         "--gpu-memory-utilization",
-        "0.9",  # Use most of A100's 40GB
+        "0.85",  # Leave some headroom
         "--max-num-seqs",
-        "8",  # Balance between throughput and latency
-        "--disable-log-stats",  # Reduce log noise
-        "--trust-remote-code",  # Required for some models
+        "4",  # Start conservative
+        "--trust-remote-code",  # Required for GPT-OSS models
     ]
 
-    # Add async scheduling if available (better performance)
+    # Check vLLM version and add appropriate flags
     try:
         import vllm
 
-        if hasattr(vllm, "__version__") and vllm.__version__ >= "0.5.0":
-            vllm_args.append("--enable-prefix-caching")  # Cache common prefixes
+        version = getattr(vllm, "__version__", "0.0.0")
+        print(f"   Using vLLM version: {version}")
+
+        # Add version-specific optimizations
+        if version >= "0.6.0":
+            vllm_args.extend(["--disable-log-stats", "--disable-log-requests"])
     except ImportError:
-        pass
+        print("   ⚠️  vLLM not found, attempting to proceed anyway...")
 
     print("📊 Configuration:")
     print(f"   Model: {model_name}")
