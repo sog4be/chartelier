@@ -153,7 +153,7 @@ class BaseTemplate(ABC):
         element: AuxiliaryElement,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        element_config: dict[str, Any] | None = None,  # noqa: ARG002
+        element_config: dict[str, Any] | None = None,
     ) -> alt.Chart | alt.LayerChart:
         """Apply a single auxiliary element.
 
@@ -170,11 +170,31 @@ class BaseTemplate(ABC):
         # Default implementation - subclasses can override
         # Get auxiliary element styling from color strategy
         aux_style = self.color_strategy.get_auxiliary_colors(element)
+        config = element_config or {}
 
         if element == AuxiliaryElement.TARGET_LINE and mapping.y:
-            # Use the 75th percentile as a target line example
-            target_val = data[mapping.y].quantile(0.75)
+            # Get target value from config or calculate default
+            target_val = None
+
+            # Check if target_value is provided in config
+            if "target_value" in config:
+                target_val = config["target_value"]
+            # Check if percentile is specified
+            elif "percentile" in config:
+                percentile = config["percentile"]
+                if 0 <= percentile <= 1:
+                    target_val = data[mapping.y].quantile(percentile)
+                else:
+                    # Invalid percentile, use default
+                    target_val = data[mapping.y].quantile(0.75)
+            # Default to 75th percentile
+            else:
+                target_val = data[mapping.y].quantile(0.75)
+
             if target_val is not None:
+                # Prepare label for the target line if provided
+                label = config.get("label", None)
+
                 rule_data = self.prepare_data_for_altair(pl.DataFrame({"target": [target_val]}))
                 rule = (
                     alt.Chart(rule_data)
@@ -186,6 +206,26 @@ class BaseTemplate(ABC):
                     )
                     .encode(y="target:Q")
                 )
+
+                # Add text label if specified
+                if label:
+                    text_data = self.prepare_data_for_altair(pl.DataFrame({"target": [target_val], "label": [label]}))
+                    text = (
+                        alt.Chart(text_data)
+                        .mark_text(
+                            align="left",
+                            dx=5,
+                            dy=-5,
+                            fontSize=11,
+                            color=aux_style.get("color", "green"),
+                        )
+                        .encode(
+                            y="target:Q",
+                            text="label:N",
+                        )
+                    )
+                    return alt.layer(chart, rule, text)
+
                 return alt.layer(chart, rule)
 
         return chart
