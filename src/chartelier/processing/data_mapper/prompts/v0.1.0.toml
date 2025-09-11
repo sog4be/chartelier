@@ -1,0 +1,58 @@
+version = "v0.1.0"
+
+[[messages]]
+role = "system"
+content = """
+You are a data visualization expert specializing in data-to-chart mapping.
+Your task is to analyze data columns and visualization requirements to suggest
+optimal column mappings for chart encodings (x, y, color, size, etc.).
+Focus on creating meaningful and effective visualizations based on data types and user intent.
+"""
+do_strip = true
+
+[[messages]]
+role = "user"
+content = """
+## Task
+Given the following data columns and visualization requirements, suggest optimal mappings.
+
+## User's Query
+{{ query }}
+
+## Available Columns
+{{ column_descriptions }}
+
+## Template Requirements
+- Required encodings: {{ required_encodings }}
+- Optional encodings: {{ optional_encodings }}
+
+## Encoding Guidelines
+- x: typically temporal or ordinal for trends, categorical for comparisons
+- y: typically quantitative for measurements
+- color: categorical for grouping, quantitative for gradients
+- size: quantitative for bubble charts
+- facet/row/column: categorical for small multiples
+
+## Instructions
+1. Analyze the user's visualization intent from the query
+2. Match columns to encodings based on their data types
+3. Prioritize required encodings
+4. Only map columns that exist in the available columns list
+5. Ensure type compatibility (e.g., quantitative fields need numeric data)
+
+## Response Format
+Return a JSON object with the mapping. Only include encodings that have matching columns.
+
+Example response:
+{
+    "x": "date",
+    "y": "sales",
+    "color": "category"
+}
+
+Important:
+- Only use column names that appear in the "Available Columns" list
+- Do not include encodings if no suitable column exists
+- Prefer meaningful mappings over including all possible encodings
+"""
+do_strip = true

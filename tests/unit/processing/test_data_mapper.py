@@ -1,6 +1,6 @@
 """Unit tests for DataMapper component."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import polars as pl
 import pytest
@@ -21,9 +21,17 @@ class TestDataMapper:
         return Mock()
 
     @pytest.fixture
-    def mapper(self, mock_chart_builder: Mock) -> DataMapper:
+    def mock_llm_client(self) -> Mock:
+        """Create a mock LLM client."""
+        return Mock()
+
+    @pytest.fixture
+    def mapper(self, mock_chart_builder: Mock, mock_llm_client: Mock) -> DataMapper:
         """Create a DataMapper instance with mocked dependencies."""
-        return DataMapper(chart_builder=mock_chart_builder)
+        return DataMapper(
+            chart_builder=mock_chart_builder,
+            llm_client=mock_llm_client,
+        )
 
     @pytest.fixture
     def sample_data(self) -> pl.DataFrame:
@@ -161,21 +169,18 @@ class TestDataMapper:
         assert validated.y == "sales"
         assert validated.color == "category"
 
-    @patch("chartelier.processing.data_mapper.completion")
     def test_map_with_llm_success(
         self,
-        mock_completion: Mock,
         mapper: DataMapper,
+        mock_llm_client: Mock,
         sample_data: pl.DataFrame,
         template_spec: TemplateSpec,
     ) -> None:
         """Test successful LLM-based mapping."""
         # Mock LLM response
         mock_response = MagicMock()
-        mock_response.choices = [
-            MagicMock(message=MagicMock(content='{"x": "date", "y": "sales", "color": "category"}'))
-        ]
-        mock_completion.return_value = mock_response
+        mock_response.content = '{"x": "date", "y": "sales", "color": "category"}'
+        mock_llm_client.complete.return_value = mock_response
 
         column_info = mapper._analyze_columns(sample_data)  # noqa: SLF001
 
@@ -187,21 +192,18 @@ class TestDataMapper:
         assert mapping.y == "sales"
         assert mapping.color == "category"
 
-    @patch("chartelier.processing.data_mapper.completion")
     def test_map_with_llm_invalid_column(
         self,
-        mock_completion: Mock,
         mapper: DataMapper,
+        mock_llm_client: Mock,
         sample_data: pl.DataFrame,
         template_spec: TemplateSpec,
     ) -> None:
         """Test LLM mapping with invalid column names."""
         # Mock LLM response with invalid column
         mock_response = MagicMock()
-        mock_response.choices = [
-            MagicMock(message=MagicMock(content='{"x": "timestamp", "y": "revenue", "color": "category"}'))
-        ]
-        mock_completion.return_value = mock_response
+        mock_response.content = '{"x": "timestamp", "y": "revenue", "color": "category"}'
+        mock_llm_client.complete.return_value = mock_response
 
         column_info = mapper._analyze_columns(sample_data)  # noqa: SLF001
 
@@ -213,11 +215,10 @@ class TestDataMapper:
         assert mapping.y is None  # "revenue" doesn't exist
         assert mapping.color == "category"  # This one exists
 
-    @patch("chartelier.processing.data_mapper.completion")
     def test_map_full_workflow_with_llm(
         self,
-        mock_completion: Mock,
         mapper: DataMapper,
+        mock_llm_client: Mock,
         mock_chart_builder: Mock,
         sample_data: pl.DataFrame,
         template_spec: TemplateSpec,
@@ -228,10 +229,8 @@ class TestDataMapper:
 
         # Mock LLM response
         mock_response = MagicMock()
-        mock_response.choices = [
-            MagicMock(message=MagicMock(content='{"x": "date", "y": "sales", "color": "category"}'))
-        ]
-        mock_completion.return_value = mock_response
+        mock_response.content = '{"x": "date", "y": "sales", "color": "category"}'
+        mock_llm_client.complete.return_value = mock_response
 
         # Execute mapping
         mapping = mapper.map(
@@ -245,11 +244,10 @@ class TestDataMapper:
         assert mapping.y == "sales"
         assert mapping.color == "category"
 
-    @patch("chartelier.processing.data_mapper.completion")
     def test_map_full_workflow_with_fallback(
         self,
-        mock_completion: Mock,
         mapper: DataMapper,
+        mock_llm_client: Mock,
         mock_chart_builder: Mock,
         sample_data: pl.DataFrame,
         template_spec: TemplateSpec,
@@ -259,7 +257,7 @@ class TestDataMapper:
         mock_chart_builder.get_template_spec.return_value = template_spec
 
         # Mock LLM failure
-        mock_completion.side_effect = Exception("LLM timeout")
+        mock_llm_client.complete.side_effect = Exception("LLM timeout")
 
         # Execute mapping (should use fallback)
         mapping = mapper.map(

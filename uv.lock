@@ -236,6 +236,7 @@ source = { editable = "." }
 dependencies = [
     { name = "altair" },
     { name = "jinja2" },
+    { name = "litellm" },
     { name = "polars" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -268,6 +269,7 @@ mcp = [
 requires-dist = [
     { name = "altair", specifier = ">=5.0.0" },
     { name = "jinja2", specifier = ">=3.1.4" },
+    { name = "litellm", specifier = ">=1.0.0" },
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.0.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13.0" },

@@ -1,17 +1,19 @@
 """Data mapper for mapping processed data columns to chart template encodings."""
 
 import json
+from pathlib import Path
 from typing import Any, ClassVar
 
 import polars as pl
-from litellm import completion
 from pydantic import ValidationError
 
 from chartelier.core.chart_builder.base import TemplateSpec
 from chartelier.core.chart_builder.builder import ChartBuilder
 from chartelier.core.errors import DataMappingError
 from chartelier.core.models import MappingConfig
+from chartelier.infra.llm_client import LLMClient, ResponseFormat, get_llm_client
 from chartelier.infra.logging import get_logger
+from chartelier.infra.prompt_template import PromptTemplate
 
 logger = get_logger(__name__)
 
@@ -61,14 +63,37 @@ class DataMapper:
         },
     }
 
-    def __init__(self, chart_builder: ChartBuilder | None = None) -> None:
+    def __init__(
+        self,
+        chart_builder: ChartBuilder | None = None,
+        llm_client: LLMClient | None = None,
+        model: str = "gpt-3.5-turbo",
+        prompt_version: str = "v0.1.0",
+    ) -> None:
         """Initialize the data mapper.
 
         Args:
             chart_builder: Optional ChartBuilder instance for template spec retrieval
+            llm_client: Optional LLM client for custom configuration
+            model: LLM model to use for mapping suggestions
+            prompt_version: Version of the prompt template to use
         """
         self.chart_builder = chart_builder or ChartBuilder()
         self.logger = logger
+        self.llm_client = llm_client or get_llm_client()
+        self.model = model
+
+        # Load prompt template
+        template_dir = Path(__file__).parent
+        self.prompt_template = PromptTemplate.from_component(template_dir, prompt_version)
+
+        self.logger.debug(
+            "Initialized DataMapper",
+            extra={
+                "model": self.model,
+                "prompt_version": prompt_version,
+            },
+        )
 
     def map(
         self,
@@ -219,46 +244,28 @@ class DataMapper:
                 desc += " (numeric)"
             column_descriptions.append(desc)
 
-        # Build prompt
-        prompt = f"""Given the following data columns and visualization requirements, suggest optimal mappings.
+        # Prepare template variables
+        template_vars = {
+            "query": query,
+            "column_descriptions": "\n".join(column_descriptions),
+            "required_encodings": str(template_spec.required_encodings),
+            "optional_encodings": str(template_spec.optional_encodings),
+        }
 
-User's query: {query}
-
-Available columns:
-{chr(10).join(column_descriptions)}
-
-Template requirements:
-- Required encodings: {template_spec.required_encodings}
-- Optional encodings: {template_spec.optional_encodings}
-
-Encoding constraints:
-- x: typically temporal or ordinal for trends, categorical for comparisons
-- y: typically quantitative for measurements
-- color: categorical for grouping, quantitative for gradients
-- size: quantitative for bubble charts
-- facet/row/column: categorical for small multiples
-
-Return a JSON object with the mapping. Only include encodings that have matching columns.
-Example: {{"x": "date", "y": "sales", "color": "category"}}
-
-Important: Only map columns that exist in the available columns list."""
-
-        messages = [
-            {"role": "system", "content": "You are a data visualization expert."},
-            {"role": "user", "content": prompt},
-        ]
+        # Generate prompt from template
+        messages = self.prompt_template.render(**template_vars)
 
         try:
-            response = completion(
-                model="gpt-3.5-turbo",
+            # Use LLMClient for the API call
+            response = self.llm_client.complete(
+                model=self.model,
                 messages=messages,
                 temperature=0.3,
                 max_tokens=500,
-                response_format={"type": "json_object"},
-                timeout=10.0,
+                response_format=ResponseFormat.JSON,
             )
 
-            mapping_dict = json.loads(response.choices[0].message.content)
+            mapping_dict = json.loads(response.content)
 
             # Filter out any invalid column names
             valid_columns = set(column_info.keys())
