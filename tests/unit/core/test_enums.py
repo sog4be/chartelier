@@ -156,4 +156,4 @@ class TestAuxiliaryElement:
     def test_total_elements(self) -> None:
         """Test total number of auxiliary elements."""
         elements = list(AuxiliaryElement)
-        assert len(elements) == 1  # Only target_line is supported
+        assert len(elements) == 10  # 10 auxiliary elements are supported
