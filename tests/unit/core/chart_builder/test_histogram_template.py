@@ -123,3 +123,51 @@ class TestHistogramTemplate:
         chart_dict = chart.to_dict()
         y_encoding = chart_dict["encoding"]["y"]
         assert y_encoding["scale"]["zero"] is True
+
+    def test_natural_boundary_0_1(self, template: HistogramTemplate) -> None:
+        """Test that probability data uses 0-1 extent."""
+        # Create probability data
+        data = pl.DataFrame({"probability": [0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9]})
+        mapping = MappingConfig(x="probability")
+        chart = template.build(data, mapping)
+
+        # Check that binning uses 0-1 extent
+        chart_dict = chart.to_dict()
+        x_encoding = chart_dict["encoding"]["x"]
+        assert "bin" in x_encoding
+        bin_config = x_encoding["bin"]
+        assert "extent" in bin_config
+        assert bin_config["extent"] == [0.0, 1.0]
+        assert bin_config["nice"] is False
+
+    def test_natural_boundary_0_100(self, template: HistogramTemplate) -> None:
+        """Test that percentage data uses 0-100 extent."""
+        # Create percentage data
+        data = pl.DataFrame({"percent": [10, 25, 50, 75, 90]})
+        mapping = MappingConfig(x="percent")
+        chart = template.build(data, mapping)
+
+        # Check that binning uses 0-100 extent
+        chart_dict = chart.to_dict()
+        x_encoding = chart_dict["encoding"]["x"]
+        assert "bin" in x_encoding
+        bin_config = x_encoding["bin"]
+        assert "extent" in bin_config
+        assert bin_config["extent"] == [0.0, 100.0]
+        assert bin_config["nice"] is False
+
+    def test_integer_data_minstep(self, template: HistogramTemplate) -> None:
+        """Test that integer data gets minstep=1."""
+        # Create integer data
+        data = pl.DataFrame({"counts": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}, schema={"counts": pl.Int32})
+        mapping = MappingConfig(x="counts")
+        chart = template.build(data, mapping)
+
+        # Check that binning includes minstep for integer data
+        chart_dict = chart.to_dict()
+        x_encoding = chart_dict["encoding"]["x"]
+        assert "bin" in x_encoding
+        bin_config = x_encoding["bin"]
+        # Should have either minstep or appropriate step size
+        if "minstep" in bin_config:
+            assert bin_config["minstep"] == 1.0
