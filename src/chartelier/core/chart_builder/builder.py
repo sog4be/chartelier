@@ -144,8 +144,8 @@ class ChartBuilder:
         mapping: MappingConfig,
         auxiliary: list[str] | None = None,
         auxiliary_config: dict[str, Any] | None = None,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart | alt.LayerChart:
         """Build chart using specified template.
 

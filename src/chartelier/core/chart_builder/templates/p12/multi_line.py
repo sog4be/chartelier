@@ -99,8 +99,8 @@ class MultiLineTemplate(BaseTemplate):
         self,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart:
         """Build multi-line chart from data and mapping.
 

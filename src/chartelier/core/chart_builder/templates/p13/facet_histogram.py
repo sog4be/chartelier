@@ -35,8 +35,8 @@ class FacetHistogramTemplate(BaseTemplate):
         self,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart:
         """Build facet histogram from data and mapping.
 
@@ -110,10 +110,15 @@ class FacetHistogramTemplate(BaseTemplate):
         # Apply encodings
         chart = chart.encode(**encodings)
 
-        # Set size and title - adjust width for faceting
+        # Set size and title - adjust for faceting to achieve target overall size
+        # With 3 columns of facets, individual facet width should be width/3
+        # With 2 rows of facets, individual facet height should be height/2
+        individual_width = max(150, width // 3)  # Ensure minimum readable size
+        individual_height = max(150, height // 2)  # Ensure minimum readable size
+
         chart = chart.properties(
-            width=width // 3,  # Smaller individual charts for faceting
-            height=height // 2,  # Adjust height for multiple rows
+            width=individual_width,  # Individual facet width
+            height=individual_height,  # Individual facet height
             title="Facet Histogram",  # Default title
         ).resolve_scale(
             y="independent"  # Allow different y-scales for each facet
