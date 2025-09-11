@@ -139,8 +139,9 @@ class ColorStrategy:
                 "stroke_width": self.style.LINE_WIDTH_DEFAULT,
             },
             PatternID.P13: {  # Distribution over time (faceted)
-                "scheme": "blues",  # Use Altair's built-in scheme
-                "custom_range": self.data.BLUES_9,
+                "scheme": self._get_categorical_scheme(series_count),
+                "custom_range": list(self.data.CHARTELIER_QUAL_10),
+                "fill_opacity": self.style.BAR_FILL_OPACITY,
             },
             PatternID.P21: {  # Grouped bar
                 "scheme": self._get_categorical_scheme(series_count),

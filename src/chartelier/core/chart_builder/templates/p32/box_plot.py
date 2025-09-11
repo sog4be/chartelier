@@ -6,7 +6,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
+from chartelier.core.enums import AuxiliaryElement, PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -51,10 +51,18 @@ class BoxPlotTemplate(BaseTemplate):
         # Convert Polars DataFrame to Altair-compatible format
         chart_data = self.prepare_data_for_altair(data)
 
+        # Get P32 pattern colors from color strategy
+        pattern_colors = self.color_strategy.get_pattern_colors(PatternID.P32)
+        series_count = data[mapping.color].n_unique() if mapping.color and mapping.color in data.columns else 1
+
         # Create base chart with box plot
+        # Use the first color from CHARTELIER_QUAL_10 palette as default
+        default_color = self.color_strategy.data.CHARTELIER_QUAL_10[0]
         chart = alt.Chart(chart_data).mark_boxplot(
             size=40,  # Box width
             outliers=True,  # Show outlier points
+            opacity=pattern_colors.get("fill_opacity", 0.7),
+            color=default_color,  # Apply default color
         )
 
         # Build encodings
@@ -75,10 +83,12 @@ class BoxPlotTemplate(BaseTemplate):
 
         # Optional encodings
         if mapping.color:
+            # Apply custom color scheme for box plots
+            # Use CHARTELIER_QUAL_10 palette for consistency
             encodings["color"] = alt.Color(
                 f"{mapping.color}:N",
                 title=mapping.color,
-                # Don't set scale here - let theme handle the color scheme
+                scale=alt.Scale(range=list(self.color_strategy.data.CHARTELIER_QUAL_10[:series_count])),
             )
 
         # Apply encodings
