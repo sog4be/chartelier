@@ -7,7 +7,7 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement, PatternID
+from chartelier.core.enums import PatternID
 from chartelier.core.models import MappingConfig
 
 
@@ -26,9 +26,7 @@ class HistogramTemplate(BaseTemplate):
             pattern_ids=["P03"],  # Overview only - Distribution/composition
             required_encodings=["x"],
             optional_encodings=["color", "opacity"],
-            allowed_auxiliary=[
-                AuxiliaryElement.TARGET_LINE,
-            ],
+            allowed_auxiliary=[],  # Target line not applicable for histograms (y-axis is frequency)
         )
 
     def build(

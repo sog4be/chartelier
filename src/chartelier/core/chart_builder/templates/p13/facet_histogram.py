@@ -7,7 +7,6 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 
 
@@ -26,9 +25,7 @@ class FacetHistogramTemplate(BaseTemplate):
             pattern_ids=["P13"],  # Transition + Overview - Distribution over time
             required_encodings=["x", "facet"],  # x for values, facet for time/category grouping
             optional_encodings=["color", "opacity"],
-            allowed_auxiliary=[
-                AuxiliaryElement.TARGET_LINE,
-            ],
+            allowed_auxiliary=[],  # Target line not applicable for histograms (y-axis is frequency)
         )
 
     def build(

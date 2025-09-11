@@ -7,7 +7,6 @@ import polars as pl
 import pytest
 
 from chartelier.core.chart_builder.templates.p03.histogram import HistogramTemplate
-from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 
 
@@ -114,17 +113,6 @@ class TestHistogramTemplate:
 
         chart_dict = chart.to_dict()
         assert "color" in chart_dict["encoding"]
-
-    def test_auxiliary_target_line_not_applicable(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
-        """Test that target line doesn't apply to histograms (no y-axis mapping)."""
-        mapping = MappingConfig(x="values")
-        chart = template.build(sample_data, mapping)
-
-        # Apply target line - won't add anything since histograms don't have y mapping
-        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_data, mapping)
-
-        # Should return the original chart since target line requires y mapping
-        assert isinstance(chart_with_aux, alt.Chart)
 
     def test_zero_origin_enforced(self, template: HistogramTemplate, sample_data: pl.DataFrame) -> None:
         """Test that histogram Y-axis starts at zero as per Visualization Policy."""
