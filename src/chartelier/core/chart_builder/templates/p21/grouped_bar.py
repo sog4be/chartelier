@@ -34,8 +34,8 @@ class GroupedBarTemplate(BaseTemplate):
         self,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart:
         """Build grouped bar chart from data and mapping.
 
@@ -97,7 +97,7 @@ class GroupedBarTemplate(BaseTemplate):
 
         # Set size and title
         chart = chart.properties(
-            width=width // 4,  # Narrower bars for grouping
+            width=width,  # Use full width - Altair will handle grouped bar spacing
             height=height,
             title="Grouped Bar Chart",  # Default title
         )

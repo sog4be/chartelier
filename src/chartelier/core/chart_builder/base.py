@@ -82,8 +82,8 @@ class BaseTemplate(ABC):
         self,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart:
         """Build Altair chart from data and mapping.
 

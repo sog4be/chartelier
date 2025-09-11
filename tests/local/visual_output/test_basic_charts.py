@@ -441,7 +441,7 @@ class TestVisualOutput:
             mapping=mapping,
             auxiliary=["mean_line"],
             width=1200,
-            height=600,
+            height=800,
         )
 
         # Override title with business context

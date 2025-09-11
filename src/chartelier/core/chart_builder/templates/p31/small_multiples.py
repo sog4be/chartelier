@@ -34,8 +34,8 @@ class SmallMultiplesTemplate(BaseTemplate):
         self,
         data: pl.DataFrame,
         mapping: MappingConfig,
-        width: int = 800,
-        height: int = 600,
+        width: int = 1200,
+        height: int = 800,
     ) -> alt.Chart:
         """Build small multiples chart from data and mapping.
 
