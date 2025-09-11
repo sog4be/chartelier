@@ -214,6 +214,10 @@ class MappingError(BusinessError):
         )
 
 
+# Alias for consistency with module naming
+DataMappingError = MappingError
+
+
 class UpstreamError(ChartelierError):
     """Raised when upstream service (LLM) fails."""
 
