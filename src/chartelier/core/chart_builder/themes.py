@@ -80,6 +80,7 @@ class Theme:
                 fontSize=22,  # Increased for 300dpi readability
                 fontWeight=600,  # Semi-bold instead of bold for better balance
                 anchor="start",
+                offset=12,  # Add spacing between title and chart area
             )
             .configure_view(
                 strokeWidth=0,  # No border around chart area
@@ -133,6 +134,7 @@ class Theme:
                 "fontSize": 22,  # Increased for 300dpi readability
                 "fontWeight": 600,  # Semi-bold instead of bold for better balance
                 "anchor": "start",
+                "offset": 12,  # Add spacing between title and chart area
             },
             "view": {
                 "strokeWidth": 0,
