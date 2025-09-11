@@ -7,7 +7,6 @@ import altair as alt
 import polars as pl
 
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
-from chartelier.core.enums import AuxiliaryElement
 from chartelier.core.models import MappingConfig
 
 
@@ -26,9 +25,7 @@ class OverlayHistogramTemplate(BaseTemplate):
             pattern_ids=["P23"],  # Difference + Overview - Category-wise distribution comparison
             required_encodings=["x", "color"],  # x for values, color for category grouping
             optional_encodings=["opacity"],
-            allowed_auxiliary=[
-                AuxiliaryElement.TARGET_LINE,
-            ],
+            allowed_auxiliary=[],  # Target line not applicable for histograms (y-axis is frequency)
         )
 
     def build(
