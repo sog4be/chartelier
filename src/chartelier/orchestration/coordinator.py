@@ -478,6 +478,8 @@ class Coordinator:
 
         # Update context
         context.processed_data = processed.df
+        # Store operations applied for metadata
+        context.options["_operations_applied"] = processed.operations_applied
         context.warnings.extend([f"Data processing: {op}" for op in processed.operations_applied])
 
     def _execute_data_mapping(self, context: ProcessingContext) -> None:
@@ -596,18 +598,32 @@ class Coordinator:
         # Calculate total processing time
         total_time = sum(context.processing_time_ms.values())
 
-        # Build metadata
+        # Build metadata according to MCP specification
         metadata = {
-            "pattern_id": context.pattern_id,
-            "template_id": context.template_id,
-            "warnings": context.warnings,
-            "stats": {
-                "rows": context.rows_count,
-                "cols": context.cols_count,
-                "sampled": context.data_sampled,
-                "duration_ms": context.processing_time_ms,
-                "total_duration_ms": total_time,
+            "pattern_id": context.pattern_id or "P01",  # Default to P01 if not set
+            "template_id": context.template_id or "line",  # Default template
+            "mapping": context.mapping_config or {},
+            "auxiliary": context.auxiliary_config or [],
+            "operations_applied": context.options.get("_operations_applied", []),
+            "decisions": {
+                "pattern": {"elapsed_ms": context.processing_time_ms.get(PipelinePhase.PATTERN_SELECTION.value, 0)},
+                "chart": {"elapsed_ms": context.processing_time_ms.get(PipelinePhase.CHART_SELECTION.value, 0)},
             },
+            "stats": {
+                "rows": context.rows_count or 0,
+                "cols": context.cols_count or 0,
+                "sampled": context.data_sampled,
+                "duration_ms": {
+                    "total": total_time,
+                    **dict(context.processing_time_ms.items()),
+                },
+            },
+            "versions": {
+                "api": "0.2.0",
+                "templates": "2025.01",
+                "patterns": "v1",
+            },
+            "warnings": context.warnings,
             "fallback_applied": context.fallback_applied,
         }
 

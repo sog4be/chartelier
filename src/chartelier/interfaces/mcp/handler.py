@@ -9,6 +9,7 @@ from chartelier.core.enums import MCPErrorCode
 from chartelier.core.errors import ChartelierError
 from chartelier.infra.logging import get_logger
 from chartelier.interfaces.mcp.protocol import (
+    ImageContent,
     InitializeResult,
     JSONRPCError,
     JSONRPCRequest,
@@ -220,22 +221,40 @@ class MCPHandler:
 
             # Convert visualization result to MCP tool call result
             if visualization_result.error:
-                # Return error result
+                # Return error result with proper format
+                # Build error message with hint if available
+                error_message = visualization_result.error["message"]
+                if visualization_result.error.get("hint"):
+                    error_message = f"{error_message}. {visualization_result.error['hint']}"
+
                 error_result = ToolCallResult(
-                    content=[TextContent(text=visualization_result.error["message"])],
+                    content=[TextContent(text=error_message)],
                     structuredContent={
-                        "error": visualization_result.error,
+                        "error": {
+                            "code": visualization_result.error.get("code", "E500_INTERNAL"),
+                            "message": visualization_result.error["message"],
+                            "hint": visualization_result.error.get("hint"),
+                            "correlation_id": f"req-{self.request_count}",  # Simple correlation ID
+                        },
                         "metadata": visualization_result.metadata,
                     },
                     isError=True,
                 )
                 return error_result.model_dump(by_alias=True)
-            # Return success result (will be implemented when pipeline is complete)
+            # Return success result with image and metadata
+            # Determine MIME type based on format
+            mime_type = "image/png" if visualization_result.format == "png" else "image/svg+xml"
+
+            # Create image content
+            image_content = ImageContent(
+                data=visualization_result.image_data or "",  # Base64 encoded for PNG, string for SVG
+                mimeType=mime_type,
+            )
+
+            # Build structured content with only metadata (per MCP spec)
             success_result = ToolCallResult(
-                content=[TextContent(text="Visualization generated successfully")],
+                content=[image_content],
                 structuredContent={
-                    "format": visualization_result.format,
-                    "image": visualization_result.image_data,
                     "metadata": visualization_result.metadata,
                 },
                 isError=False,
