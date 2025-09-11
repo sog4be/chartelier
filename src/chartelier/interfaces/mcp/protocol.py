@@ -69,12 +69,12 @@ class ServerCapabilities(BaseModel):
 class InitializeResult(BaseModel):
     """Response for initialize method."""
 
-    protocolVersion: str = "2024-11-05"  # noqa: N815
+    protocolVersion: str = "2025-06-18"  # noqa: N815
     serverInfo: ServerInfo = Field(default_factory=ServerInfo)  # noqa: N815
     capabilities: ServerCapabilities = Field(default_factory=lambda: ServerCapabilities(tools=ToolsCapability()))
     instructions: str = (
         "Use `chartelier_visualize` to convert CSV/JSON + intent (ja/en) into a static chart. "
-        "Required: data, query. Defaults: format=png, dpi=96, size=800x600. Timeout 60s. "
+        "Required: data, query. Defaults: format=png, dpi=300, size=1200x900. Timeout 60s. "
         "Pattern selection failure returns error."
     )
 
@@ -148,9 +148,9 @@ def get_chartelier_tool() -> Tool:
                     "type": "object",
                     "properties": {
                         "format": {"enum": ["png", "svg"], "default": "png"},
-                        "dpi": {"type": "integer", "minimum": 72, "maximum": 300, "default": 96},
-                        "width": {"type": "integer", "minimum": 400, "maximum": 2000, "default": 800},
-                        "height": {"type": "integer", "minimum": 300, "maximum": 2000, "default": 600},
+                        "dpi": {"type": "integer", "minimum": 72, "maximum": 300, "default": 300},
+                        "width": {"type": "integer", "minimum": 600, "maximum": 2000, "default": 1200},
+                        "height": {"type": "integer", "minimum": 400, "maximum": 2000, "default": 900},
                         "locale": {"enum": ["ja", "en"]},
                     },
                 },

@@ -21,7 +21,7 @@ class TestMCPHandler:
         request = JSONRPCRequest(
             id=1,
             method=MCPMethod.INITIALIZE,
-            params={"protocolVersion": "2024-11-05", "capabilities": {}},
+            params={"protocolVersion": "2025-06-18", "capabilities": {}},
         )
 
         # Handle request
@@ -39,7 +39,7 @@ class TestMCPHandler:
 
         # Verify initialize result
         result = response.result
-        assert result["protocolVersion"] == "2024-11-05"
+        assert result["protocolVersion"] == "2025-06-18"
         assert result["serverInfo"]["name"] == "chartelier"
         assert result["serverInfo"]["version"] == "0.2.0"
         assert result["capabilities"]["tools"]["listChanged"] is False
