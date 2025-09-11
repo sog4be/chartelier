@@ -199,6 +199,54 @@ class TestVisualOutput:
 
         return pl.DataFrame(data)
 
+    @pytest.fixture
+    def facet_data(self):
+        """Create sample data for P13 facet histogram."""
+        import random  # noqa: PLC0415
+
+        random.seed(42)
+        data = []
+        categories = ["Electronics", "Clothing", "Food", "Books"]
+
+        for category in categories:
+            # Different distribution centers for each category
+            center = {"Electronics": 75, "Clothing": 65, "Food": 80, "Books": 70}[category]
+            spread = {"Electronics": 15, "Clothing": 12, "Food": 8, "Books": 10}[category]
+
+            for _ in range(100):
+                value = random.gauss(center, spread)
+                data.append({"category": category, "value": value})
+
+        return pl.DataFrame(data)
+
+    @pytest.fixture
+    def small_multiples_data(self):
+        """Create sample data for P31 small multiples."""
+        import random  # noqa: PLC0415
+
+        random.seed(42)
+        data = []
+        regions = ["North", "South", "East", "West"]
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+        products = ["Product A", "Product B"]
+
+        for region in regions:
+            for month in months:
+                for product in products:
+                    # Different baseline performance per region
+                    base = {"North": 100, "South": 85, "East": 90, "West": 80}[region]
+                    # Monthly growth factor
+                    month_factor = months.index(month) * 5
+                    # Product performance difference
+                    product_factor = 10 if product == "Product A" else 0
+                    # Random variation
+                    noise = random.gauss(0, 8)
+
+                    value = base + month_factor + product_factor + noise
+                    data.append({"region": region, "month": month, "product": product, "value": value})
+
+        return pl.DataFrame(data)
+
     def test_p01_line_chart(self, builder, time_series_data, output_dir):
         """Generate P01 line chart with trend analysis."""
         mapping = MappingConfig(x="date", y="value")
@@ -212,6 +260,9 @@ class TestVisualOutput:
             width=1200,
             height=600,
         )
+
+        # Override title with business context
+        chart = chart.properties(title="Daily Revenue Trend - Q1 2024 Performance Analysis")
 
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
@@ -247,6 +298,9 @@ class TestVisualOutput:
             height=600,
         )
 
+        # Override title with business context
+        chart = chart.properties(title="Department Headcount Distribution - 2024 Organizational Review")
+
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
         svg_path = output_dir / "P02_bar_chart.svg"
@@ -280,6 +334,9 @@ class TestVisualOutput:
             width=1200,
             height=600,
         )
+
+        # Override title with business context
+        chart = chart.properties(title="Employee Performance Score Distribution - Annual Review 2024")
 
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
@@ -315,6 +372,9 @@ class TestVisualOutput:
             height=600,
         )
 
+        # Override title with business context
+        chart = chart.properties(title="Revenue vs Cost vs Profit Trends - Q1 2024 Financial Summary")
+
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
         svg_path = output_dir / "P12_multi_line_chart.svg"
@@ -335,6 +395,41 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
+    def test_p13_facet_histogram(self, builder, facet_data, output_dir):
+        """Generate P13 facet histogram for distribution changes over categories."""
+        mapping = MappingConfig(x="value", facet="category")
+
+        chart = builder.build(
+            template_id="P13_facet_histogram",
+            data=facet_data,
+            mapping=mapping,
+            width=1200,
+            height=800,
+        )
+
+        # Override title with business context
+        chart = chart.properties(title="Score Distribution by Product Category - Q4 2024 Analysis")
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P13_facet_histogram.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P13_facet_histogram.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P13 facet histogram", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P13 facet histogram", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
     def test_p21_grouped_bar_chart(self, builder, grouped_data, output_dir):
         """Generate P21 grouped bar chart for category comparison over time."""
         mapping = MappingConfig(x="quarter", y="sales", color="region")
@@ -348,6 +443,9 @@ class TestVisualOutput:
             width=1200,
             height=600,
         )
+
+        # Override title with business context
+        chart = chart.properties(title="Quarterly Sales Performance by Region - 2024 Target Achievement")
 
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
@@ -383,6 +481,9 @@ class TestVisualOutput:
             height=600,
         )
 
+        # Override title with business context
+        chart = chart.properties(title="Customer Satisfaction Score Distribution by Segment - 2024 Survey Results")
+
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)
         svg_path = output_dir / "P23_overlay_histogram.svg"
@@ -403,6 +504,41 @@ class TestVisualOutput:
 
         assert svg_path.exists()
 
+    def test_p31_small_multiples(self, builder, small_multiples_data, output_dir):
+        """Generate P31 small multiples for overview changes over categories."""
+        mapping = MappingConfig(x="month", y="value", facet="region", color="product")
+
+        chart = builder.build(
+            template_id="P31_small_multiples",
+            data=small_multiples_data,
+            mapping=mapping,
+            width=1400,
+            height=800,
+        )
+
+        # Override title with business context
+        chart = chart.properties(title="Regional Performance Overview - 2024 Comparative Analysis")
+
+        # Export as SVG
+        svg_output = builder.export(chart, OutputFormat.SVG)
+        svg_path = output_dir / "P31_small_multiples.svg"
+        svg_path.write_text(svg_output)
+
+        # Try PNG export if available
+        try:
+            png_output = builder.export(chart, OutputFormat.PNG, dpi=150)
+            png_path = output_dir / "P31_small_multiples.png"
+
+            import base64  # noqa: PLC0415
+
+            png_data = base64.b64decode(png_output)
+            png_path.write_bytes(png_data)
+            logger.info("Generated P31 small multiples", svg=str(svg_path), png=str(png_path))
+        except Exception as e:  # noqa: BLE001
+            logger.info("Generated P31 small multiples", svg=str(svg_path), png_error=str(e))
+
+        assert svg_path.exists()
+
     def test_p32_box_plot(self, builder, box_plot_data, output_dir):
         """Generate P32 box plot for distribution comparison between categories."""
         mapping = MappingConfig(x="department", y="salary")
@@ -416,6 +552,9 @@ class TestVisualOutput:
             width=1200,
             height=600,
         )
+
+        # Override title with business context
+        chart = chart.properties(title="Salary Distribution Analysis by Department - 2024 Compensation Review")
 
         # Export as SVG
         svg_output = builder.export(chart, OutputFormat.SVG)

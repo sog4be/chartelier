@@ -39,7 +39,7 @@ class TestAuxiliaryMatrix:
         return ChartBuilder()
 
     @pytest.fixture
-    def data_fixtures(self):
+    def data_fixtures(self):  # noqa: C901, PLR0912
         """Create all data fixtures needed for different templates."""
         random.seed(42)
 
@@ -101,6 +101,27 @@ class TestAuxiliaryMatrix:
             for _ in range(30):
                 box_plot_data.append({"department": dept, "salary": max(30000, random.gauss(mean, 15000))})
 
+        # Facet data for P13
+        facet_data = []
+        for category in ["Electronics", "Clothing", "Food", "Books"]:
+            center = {"Electronics": 75, "Clothing": 65, "Food": 80, "Books": 70}[category]
+            spread = {"Electronics": 15, "Clothing": 12, "Food": 8, "Books": 10}[category]
+            for _ in range(100):
+                value = random.gauss(center, spread)
+                facet_data.append({"category": category, "value": value})
+
+        # Small multiples data for P31
+        small_multiples_data = []
+        for region in ["North", "South", "East", "West"]:
+            for month in ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]:
+                for product in ["Product A", "Product B"]:
+                    base = {"North": 100, "South": 85, "East": 90, "West": 80}[region]
+                    month_factor = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].index(month) * 5
+                    product_factor = 10 if product == "Product A" else 0
+                    noise = random.gauss(0, 8)
+                    value = base + month_factor + product_factor + noise
+                    small_multiples_data.append({"region": region, "month": month, "product": product, "value": value})
+
         return {
             "time_series": time_series_data,
             "multi_series": pl.DataFrame(multi_series_data),
@@ -109,6 +130,8 @@ class TestAuxiliaryMatrix:
             "grouped": pl.DataFrame(grouped_data),
             "category_distribution": pl.DataFrame(category_dist_data),
             "box_plot": pl.DataFrame(box_plot_data),
+            "facet": pl.DataFrame(facet_data),
+            "small_multiples": pl.DataFrame(small_multiples_data),
         }
 
     def test_auxiliary_matrix_comprehensive(self, builder, data_fixtures, output_dir):
@@ -132,6 +155,10 @@ class TestAuxiliaryMatrix:
                 "data": data_fixtures["multi_series"],
                 "mapping": MappingConfig(x="date", y="value", color="series"),
             },
+            "P13_facet_histogram": {
+                "data": data_fixtures["facet"],
+                "mapping": MappingConfig(x="value", facet="category"),
+            },
             "P21_grouped_bar": {
                 "data": data_fixtures["grouped"],
                 "mapping": MappingConfig(x="quarter", y="sales", color="region"),
@@ -139,6 +166,10 @@ class TestAuxiliaryMatrix:
             "P23_overlay_histogram": {
                 "data": data_fixtures["category_distribution"],
                 "mapping": MappingConfig(x="value", color="group"),
+            },
+            "P31_small_multiples": {
+                "data": data_fixtures["small_multiples"],
+                "mapping": MappingConfig(x="month", y="value", facet="region", color="product"),
             },
             "P32_box_plot": {
                 "data": data_fixtures["box_plot"],
@@ -159,16 +190,28 @@ class TestAuxiliaryMatrix:
                     result = self._test_single_combination(builder, template_id, aux_element, config, output_dir)
                     results.append(result)
 
-                except (ValueError, KeyError, RuntimeError) as e:
-                    logger.warning(
-                        "Failed to generate %s with %s", template_id, aux_element.value, extra={"error": str(e)}
-                    )
+                except Exception as e:  # noqa: BLE001
+                    error_msg = str(e)
+                    # Special handling for known facet limitations
+                    if "Faceted charts cannot be layered" in error_msg:
+                        logger.info(
+                            "Skipping %s with %s (faceted charts don't support auxiliary layers)",
+                            template_id,
+                            aux_element.value,
+                        )
+                        status = "skipped"
+                    else:
+                        logger.warning(
+                            "Failed to generate %s with %s", template_id, aux_element.value, extra={"error": error_msg}
+                        )
+                        status = "error"
+
                     results.append(
                         {
                             "template": template_id,
                             "auxiliary": aux_element.value,
-                            "status": "error",
-                            "error": str(e),
+                            "status": status,
+                            "error": error_msg,
                             "svg_file": None,
                             "png_file": None,
                         }
@@ -252,6 +295,7 @@ class TestAuxiliaryMatrix:
             total_combinations=len(results),
             successful=sum(1 for r in results if r["status"] == "success"),
             failed=sum(1 for r in results if r["status"] == "error"),
+            skipped=sum(1 for r in results if r["status"] == "skipped"),
         )
 
     def _generate_html_report(self, results: list[dict[str, Any]]) -> str:
@@ -274,6 +318,7 @@ class TestAuxiliaryMatrix:
             "th { background-color: #f2f2f2; }",
             ".success { background-color: #d4edda; }",
             ".error { background-color: #f8d7da; }",
+            ".skipped { background-color: #fff3cd; }",
             ".template-section { margin-bottom: 20px; }",
             "</style></head><body>",
             "<h1>Auxiliary Element Matrix Report</h1>",
