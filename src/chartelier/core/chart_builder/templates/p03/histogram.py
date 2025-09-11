@@ -6,6 +6,7 @@ from typing import Any
 import altair as alt
 import polars as pl
 
+from chartelier.core.chart_builder.axis import decide_histogram_binning
 from chartelier.core.chart_builder.base import BaseTemplate, TemplateSpec
 from chartelier.core.enums import PatternID
 from chartelier.core.models import MappingConfig
@@ -73,10 +74,24 @@ class HistogramTemplate(BaseTemplate):
             is_numeric = any(t in x_dtype.lower() for t in ["int", "float", "decimal"])
 
             if is_numeric:
-                # Apply binning for numeric data
+                # Decide extent/step for bounded/natural ranges
+                decision = decide_histogram_binning(data, mapping.x, bin_count)
+
+                # Build bin configuration
+                bin_kwargs: dict[str, Any] = {"nice": decision.nice}
+                if decision.extent:
+                    bin_kwargs["extent"] = list(decision.extent)
+                if decision.step:
+                    bin_kwargs["step"] = decision.step
+                if decision.minstep:
+                    bin_kwargs["minstep"] = decision.minstep
+                else:
+                    # If no specific step is decided, use maxbins
+                    bin_kwargs["maxbins"] = bin_count
+
                 encodings["x"] = alt.X(
                     f"{mapping.x}:Q",
-                    bin=alt.Bin(maxbins=bin_count),
+                    bin=alt.Bin(**bin_kwargs),
                     title=mapping.x,
                 )
             else:

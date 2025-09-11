@@ -154,7 +154,7 @@ class TestVisualOutput:
 
     @pytest.fixture
     def category_distribution_data(self):
-        """Create sample data for P23 overlay histogram."""
+        """Create sample data for P23 overlay histogram - test scores (0-100)."""
         import random  # noqa: PLC0415
 
         random.seed(42)
@@ -162,15 +162,21 @@ class TestVisualOutput:
 
         # Group A: Normal distribution around 70
         for _ in range(200):
-            data.append({"value": random.gauss(70, 12), "group": "Group A"})
+            score = random.gauss(70, 12)
+            score = max(0, min(100, score))  # Clip to valid percentage range
+            data.append({"pct_score": score, "group": "Group A"})
 
         # Group B: Normal distribution around 85
         for _ in range(200):
-            data.append({"value": random.gauss(85, 10), "group": "Group B"})
+            score = random.gauss(85, 10)
+            score = max(0, min(100, score))  # Clip to valid percentage range
+            data.append({"pct_score": score, "group": "Group B"})
 
         # Group C: Normal distribution around 60
         for _ in range(200):
-            data.append({"value": random.gauss(60, 15), "group": "Group C"})
+            score = random.gauss(60, 15)
+            score = max(0, min(100, score))  # Clip to valid percentage range
+            data.append({"pct_score": score, "group": "Group C"})
 
         return pl.DataFrame(data)
 
@@ -201,7 +207,7 @@ class TestVisualOutput:
 
     @pytest.fixture
     def facet_data(self):
-        """Create sample data for P13 facet histogram."""
+        """Create sample data for P13 facet histogram - satisfaction scores (0-100)."""
         import random  # noqa: PLC0415
 
         random.seed(42)
@@ -209,13 +215,16 @@ class TestVisualOutput:
         categories = ["Electronics", "Clothing", "Food", "Books"]
 
         for category in categories:
-            # Different distribution centers for each category
+            # Different distribution centers for each category (satisfaction scores)
             center = {"Electronics": 75, "Clothing": 65, "Food": 80, "Books": 70}[category]
             spread = {"Electronics": 15, "Clothing": 12, "Food": 8, "Books": 10}[category]
 
             for _ in range(100):
+                # Generate score and clip to 0-100 range (satisfaction percentage)
                 value = random.gauss(center, spread)
-                data.append({"category": category, "value": value})
+                value = max(0, min(100, value))  # Clip to valid percentage range
+                # Rename to percent_satisfaction to trigger 0-100 detection
+                data.append({"category": category, "percent_satisfaction": value})
 
         return pl.DataFrame(data)
 
@@ -397,7 +406,7 @@ class TestVisualOutput:
 
     def test_p13_facet_histogram(self, builder, facet_data, output_dir):
         """Generate P13 facet histogram for distribution changes over categories."""
-        mapping = MappingConfig(x="value", facet="category")
+        mapping = MappingConfig(x="percent_satisfaction", facet="category")
 
         chart = builder.build(
             template_id="P13_facet_histogram",
@@ -469,7 +478,7 @@ class TestVisualOutput:
 
     def test_p23_overlay_histogram(self, builder, category_distribution_data, output_dir):
         """Generate P23 overlay histogram for category-wise distribution comparison."""
-        mapping = MappingConfig(x="value", color="group")
+        mapping = MappingConfig(x="pct_score", color="group")
 
         # Build chart with mean lines per category
         chart = builder.build(
