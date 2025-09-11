@@ -118,27 +118,14 @@ class TestBoxPlotTemplate:
         if "scale" in y_encoding:
             assert y_encoding["scale"]["zero"] is False
 
-    def test_auxiliary_overall_mean_line(
+    def test_auxiliary_target_line_basic(
         self, template: BoxPlotTemplate, sample_distribution_data: pl.DataFrame
     ) -> None:
-        """Test applying overall mean line auxiliary element."""
-        mapping = MappingConfig(x="category", y="value")
-        chart = template.build(sample_distribution_data, mapping)
-
-        # Apply mean line - should show overall mean across all categories
-        chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.MEAN_LINE], sample_distribution_data, mapping
-        )
-
-        # Should return a layer chart with horizontal mean line
-        assert isinstance(chart_with_aux, alt.LayerChart)
-
-    def test_auxiliary_target_line(self, template: BoxPlotTemplate, sample_distribution_data: pl.DataFrame) -> None:
         """Test applying target line auxiliary element."""
         mapping = MappingConfig(x="category", y="value")
         chart = template.build(sample_distribution_data, mapping)
 
-        # Apply target line
+        # Apply target line - the only supported auxiliary element
         chart_with_aux = template.apply_auxiliary(
             chart, [AuxiliaryElement.TARGET_LINE], sample_distribution_data, mapping
         )
@@ -146,34 +133,29 @@ class TestBoxPlotTemplate:
         # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-    def test_auxiliary_threshold_band(self, template: BoxPlotTemplate, sample_distribution_data: pl.DataFrame) -> None:
-        """Test applying threshold band auxiliary element."""
+    def test_auxiliary_target_line_only(
+        self, template: BoxPlotTemplate, sample_distribution_data: pl.DataFrame
+    ) -> None:
+        """Test that only target line auxiliary element is supported."""
         mapping = MappingConfig(x="category", y="value")
         chart = template.build(sample_distribution_data, mapping)
 
-        # Apply threshold band
+        # Apply target line (the only supported auxiliary element)
         chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.THRESHOLD], sample_distribution_data, mapping
+            chart, [AuxiliaryElement.TARGET_LINE], sample_distribution_data, mapping
         )
 
-        # Should return a layer chart with threshold band
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: BoxPlotTemplate) -> None:
-        """Test that box plot allows appropriate auxiliary elements."""
+        """Test that box plot allows only target line auxiliary element."""
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Box plots should allow reference lines and annotations
-        assert AuxiliaryElement.MEAN_LINE in allowed
+        # Box plots should only allow target line
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.THRESHOLD in allowed
-        assert AuxiliaryElement.ANNOTATION in allowed
-        assert AuxiliaryElement.HIGHLIGHT in allowed
-
-        # Should not allow trend analysis (not suitable for categorical data)
-        assert AuxiliaryElement.REGRESSION not in allowed
-        assert AuxiliaryElement.MOVING_AVG not in allowed
+        assert len(allowed) == 1  # Only one auxiliary element allowed
 
     def test_mapping_validation(self, template: BoxPlotTemplate) -> None:
         """Test mapping validation for required encodings."""

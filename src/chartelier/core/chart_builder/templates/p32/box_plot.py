@@ -26,11 +26,7 @@ class BoxPlotTemplate(BaseTemplate):
             required_encodings=["x", "y"],  # x for categories, y for values
             optional_encodings=["color"],
             allowed_auxiliary=[
-                AuxiliaryElement.MEAN_LINE,
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.THRESHOLD,
-                AuxiliaryElement.ANNOTATION,
-                AuxiliaryElement.HIGHLIGHT,
             ],
         )
 
@@ -96,84 +92,3 @@ class BoxPlotTemplate(BaseTemplate):
         )
 
         return chart  # type: ignore[no-any-return]  # noqa: RET504 — Altair type inference
-
-    def _apply_single_auxiliary(
-        self,
-        chart: alt.Chart,
-        element: AuxiliaryElement,
-        data: pl.DataFrame,
-        mapping: MappingConfig,
-        element_config: dict[str, Any] | None = None,
-    ) -> alt.Chart | alt.LayerChart:
-        """Apply a single auxiliary element specific to box plots.
-
-        Args:
-            chart: Chart to modify
-            element: Auxiliary element to apply
-            data: Input data frame
-            mapping: Column mappings
-
-        Returns:
-            Modified chart
-        """
-        # For box plots, auxiliary elements should complement the statistical summary
-        if element == AuxiliaryElement.MEAN_LINE and mapping.y:
-            # Add overall mean line across all categories
-            overall_mean = data[mapping.y].mean()
-            if overall_mean is not None:
-                rule = (
-                    alt.Chart(pl.DataFrame({"mean": [overall_mean]}))
-                    .mark_rule(
-                        color="red",
-                        strokeDash=[5, 5],
-                        strokeWidth=2,
-                    )
-                    .encode(y="mean:Q", tooltip=alt.Tooltip("mean:Q", format=".2f", title="Overall Mean"))
-                )
-                return alt.layer(chart, rule)
-
-        elif element == AuxiliaryElement.TARGET_LINE and mapping.y:
-            # Add target value line
-            target_value = 0  # Placeholder - would come from auxiliary config
-            rule = (
-                alt.Chart(pl.DataFrame({"target": [target_value]}))
-                .mark_rule(
-                    color="green",
-                    strokeDash=[10, 5],
-                    strokeWidth=2,
-                )
-                .encode(y="target:Q", tooltip=alt.Tooltip("target:Q", title="Target"))
-            )
-            return alt.layer(chart, rule)
-
-        elif element == AuxiliaryElement.THRESHOLD and mapping.y:
-            # Add threshold band for acceptable range
-            lower_threshold = -10  # Placeholder values
-            upper_threshold = 10
-            band = (
-                alt.Chart(
-                    pl.DataFrame(
-                        {
-                            "lower": [lower_threshold],
-                            "upper": [upper_threshold],
-                        }
-                    )
-                )
-                .mark_rect(
-                    opacity=0.2,
-                    color="gray",
-                )
-                .encode(
-                    y=alt.Y("lower:Q"),
-                    y2=alt.Y2("upper:Q"),
-                )
-            )
-            return alt.layer(band, chart)  # Band behind box plot
-
-        elif element == AuxiliaryElement.HIGHLIGHT and mapping.x and mapping.color:
-            # Highlight specific categories (would be configured via auxiliary config)
-            # For now, just enhance the color encoding
-            return chart
-
-        # Use base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

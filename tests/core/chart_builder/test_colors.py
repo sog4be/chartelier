@@ -142,24 +142,15 @@ class TestColorStrategy:
         assert len(colors_9["scheme"]) == 9
         assert colors_9["scheme"][0] == strategy.data.CHARTELIER_QUAL_10[0]
 
-    def test_auxiliary_colors_mean_line(self) -> None:
-        """Test color configuration for mean line auxiliary element."""
+    def test_auxiliary_colors_target_line(self) -> None:
+        """Test color configuration for target line auxiliary element."""
         strategy = ColorStrategy()
-        colors = strategy.get_auxiliary_colors(AuxiliaryElement.MEAN_LINE)
+        colors = strategy.get_auxiliary_colors(AuxiliaryElement.TARGET_LINE)
 
-        assert colors["color"] == strategy.data.NEGATIVE
-        assert colors["stroke_dash"] == list(strategy.style.DASH_PATTERN_SHORT)
+        assert colors["color"] == "#334155"  # Gray color for visual neutrality
+        assert colors["stroke_dash"] == list(strategy.style.DASH_PATTERN_MEDIUM)
         assert colors["stroke_width"] == strategy.style.LINE_WIDTH_DEFAULT
         assert colors["opacity"] == 0.8
-
-    def test_auxiliary_colors_threshold(self) -> None:
-        """Test color configuration for threshold auxiliary element."""
-        strategy = ColorStrategy()
-        colors = strategy.get_auxiliary_colors(AuxiliaryElement.THRESHOLD)
-
-        assert colors["fill_color"] == strategy.data.NEGATIVE_FILL
-        assert colors["opacity"] == 0.3
-        assert colors["edge_color"] == strategy.data.NEGATIVE
 
     def test_pattern_colors_with_edge_cases(self) -> None:
         """Test pattern color functionality with edge cases."""

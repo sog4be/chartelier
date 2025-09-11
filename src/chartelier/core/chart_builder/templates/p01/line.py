@@ -92,7 +92,6 @@ class LineTemplate(BaseTemplate):
             optional_encodings=["color", "strokeDash"],
             allowed_auxiliary=[
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.HIGHLIGHT,
             ],
         )
 

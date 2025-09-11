@@ -176,56 +176,11 @@ class ColorStrategy:
             Dictionary with element styling configuration
         """
         configs: dict[AuxiliaryElement, dict[str, Any]] = {
-            AuxiliaryElement.MEAN_LINE: {
-                "color": self.data.NEGATIVE,
-                "stroke_dash": list(self.style.DASH_PATTERN_SHORT),
-                "stroke_width": self.style.LINE_WIDTH_DEFAULT,
-                "opacity": 0.8,
-            },
-            AuxiliaryElement.MEDIAN_LINE: {
-                "color": self.data.POSITIVE,
-                "stroke_dash": list(self.style.DASH_PATTERN_SHORT),
-                "stroke_width": self.style.LINE_WIDTH_DEFAULT,
-                "opacity": 0.8,
-            },
             AuxiliaryElement.TARGET_LINE: {
                 "color": "#334155",  # Gray color for better visual neutrality
                 "stroke_dash": list(self.style.DASH_PATTERN_MEDIUM),
                 "stroke_width": self.style.LINE_WIDTH_DEFAULT,
                 "opacity": 0.8,
-            },
-            AuxiliaryElement.THRESHOLD: {
-                "fill_color": self.data.NEGATIVE_FILL,
-                "opacity": 0.3,
-                "edge_color": self.data.NEGATIVE,
-                "edge_width": 1.0,
-            },
-            AuxiliaryElement.REGRESSION: {
-                "color": self.data.ACCENT,
-                "stroke_dash": list(self.style.DOT_PATTERN),
-                "stroke_width": self.style.LINE_WIDTH_THIN,
-                "opacity": 0.7,
-            },
-            AuxiliaryElement.MOVING_AVG: {
-                "color": self.structural.AXIS_LINE,
-                "stroke_width": self.style.LINE_WIDTH_THIN,
-                "opacity": 0.7,
-            },
-            AuxiliaryElement.FORECAST: {
-                "color": self.data.ACCENT,
-                "stroke_dash": list(self.style.DASH_PATTERN_LONG),
-                "stroke_width": self.style.LINE_WIDTH_THIN,
-                "opacity": 0.6,
-            },
-            AuxiliaryElement.HIGHLIGHT: {
-                "size": 100,  # Point size for highlights
-                "color": self.data.ACCENT,
-                "opacity": 1.0,
-            },
-            AuxiliaryElement.ANNOTATION: {
-                "text_color": self.text.AXIS_LABEL,
-                "background": self.structural.BACKGROUND,
-                "border_color": self.structural.GRID_MAJOR,
             },
         }
         default_config: dict[str, Any] = {

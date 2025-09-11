@@ -110,33 +110,25 @@ class TestLineTemplate:
         # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
-    def test_multiple_auxiliary_elements(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
-        """Test applying multiple auxiliary elements."""
+    def test_auxiliary_target_line_only(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
+        """Test that only target line auxiliary element is supported."""
         mapping = MappingConfig(x="x", y="y")
         chart = template.build(sample_numeric_data, mapping)
 
-        # Apply multiple auxiliary elements
-        chart_with_aux = template.apply_auxiliary(
-            chart, [AuxiliaryElement.TARGET_LINE, AuxiliaryElement.HIGHLIGHT], sample_numeric_data, mapping
-        )
+        # Apply target line (the only supported auxiliary element)
+        chart_with_aux = template.apply_auxiliary(chart, [AuxiliaryElement.TARGET_LINE], sample_numeric_data, mapping)
 
-        # Should return a layer chart with both elements
+        # Should return a layer chart with target line
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: LineTemplate) -> None:
-        """Test that line chart allows appropriate auxiliary elements."""
+        """Test that line chart allows only target line auxiliary element."""
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Line charts should only allow target line and highlight
+        # Line charts should only allow target line
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.HIGHLIGHT in allowed
-        # These should NOT be allowed anymore
-        assert AuxiliaryElement.MEAN_LINE not in allowed
-        assert AuxiliaryElement.MEDIAN_LINE not in allowed
-        assert AuxiliaryElement.MOVING_AVG not in allowed
-        assert AuxiliaryElement.THRESHOLD not in allowed
-        assert AuxiliaryElement.ANNOTATION not in allowed
+        assert len(allowed) == 1  # Only one auxiliary element allowed
 
     def test_no_zero_origin_required(self, template: LineTemplate, sample_numeric_data: pl.DataFrame) -> None:
         """Test that line charts don't enforce zero origin as per Visualization Policy."""

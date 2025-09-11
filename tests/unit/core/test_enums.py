@@ -149,26 +149,11 @@ class TestPipelinePhase:
 class TestAuxiliaryElement:
     """Test AuxiliaryElement enumeration."""
 
-    def test_data_emphasis_elements(self) -> None:
-        """Test data emphasis auxiliary elements."""
-        assert AuxiliaryElement.HIGHLIGHT.value == "highlight"
-        assert AuxiliaryElement.ANNOTATION.value == "annotation"
-        assert AuxiliaryElement.COLOR_CODING.value == "color_coding"
-
-    def test_reference_line_elements(self) -> None:
-        """Test reference line auxiliary elements."""
-        assert AuxiliaryElement.MEAN_LINE.value == "mean_line"
-        assert AuxiliaryElement.MEDIAN_LINE.value == "median_line"
+    def test_target_line_element(self) -> None:
+        """Test target line auxiliary element (the only supported element)."""
         assert AuxiliaryElement.TARGET_LINE.value == "target_line"
-        assert AuxiliaryElement.THRESHOLD.value == "threshold"
-
-    def test_trend_display_elements(self) -> None:
-        """Test trend display auxiliary elements."""
-        assert AuxiliaryElement.REGRESSION.value == "regression"
-        assert AuxiliaryElement.MOVING_AVG.value == "moving_avg"
-        assert AuxiliaryElement.FORECAST.value == "forecast"
 
     def test_total_elements(self) -> None:
         """Test total number of auxiliary elements."""
         elements = list(AuxiliaryElement)
-        assert len(elements) == 10  # 3 emphasis + 4 reference + 3 trend
+        assert len(elements) == 1  # Only target_line is supported

@@ -92,7 +92,6 @@ class MultiLineTemplate(BaseTemplate):
             optional_encodings=["strokeDash", "opacity"],
             allowed_auxiliary=[
                 AuxiliaryElement.TARGET_LINE,
-                AuxiliaryElement.HIGHLIGHT,
             ],
         )
 
@@ -182,100 +181,3 @@ class MultiLineTemplate(BaseTemplate):
         )
 
         return chart  # type: ignore[no-any-return]  # noqa: RET504 — Altair type inference
-
-    def _apply_single_auxiliary(
-        self,
-        chart: alt.Chart,
-        element: AuxiliaryElement,
-        data: pl.DataFrame,
-        mapping: MappingConfig,
-        element_config: dict[str, Any] | None = None,
-    ) -> alt.Chart | alt.LayerChart:
-        """Apply a single auxiliary element specific to multi-line charts.
-
-        Args:
-            chart: Chart to modify
-            element: Auxiliary element to apply
-            data: Input data frame
-            mapping: Column mappings
-
-        Returns:
-            Modified chart
-        """
-        # For multi-line charts, certain elements need special handling
-        if element == AuxiliaryElement.MEAN_LINE and mapping.y and mapping.color:
-            # Calculate mean for each series
-            mean_data = data.group_by(mapping.color).agg(pl.col(mapping.y).mean().alias("mean_value"))
-
-            # Create horizontal mean lines for each series
-            rule = (
-                alt.Chart(self.prepare_data_for_altair(mean_data))
-                .mark_rule(
-                    strokeDash=[5, 5],
-                    strokeWidth=2,
-                )
-                .encode(
-                    y=alt.Y("mean_value:Q"),
-                    color=alt.Color(f"{mapping.color}:N"),
-                    tooltip=[
-                        alt.Tooltip(f"{mapping.color}:N", title="Series"),
-                        alt.Tooltip("mean_value:Q", format=".2f", title="Mean"),
-                    ],
-                )
-            )
-            return alt.layer(chart, rule)
-
-        if element == AuxiliaryElement.HIGHLIGHT and mapping.x and mapping.y and mapping.color:
-            # For multi-line charts, highlight max/min points across all series
-            # but maintain the line chart structure
-            y_col = data[mapping.y]
-            max_idx = y_col.arg_max()
-            min_idx = y_col.arg_min()
-
-            if max_idx is not None and min_idx is not None:
-                # Get the actual data points for highlighting
-                max_point = data.row(max_idx, named=True)
-                min_point = data.row(min_idx, named=True)
-
-                # Create highlight data
-                highlight_data = pl.DataFrame(
-                    [
-                        {
-                            mapping.x: max_point[mapping.x],
-                            mapping.y: max_point[mapping.y],
-                            mapping.color: max_point[mapping.color],
-                            "point_type": "Max",
-                        },
-                        {
-                            mapping.x: min_point[mapping.x],
-                            mapping.y: min_point[mapping.y],
-                            mapping.color: min_point[mapping.color],
-                            "point_type": "Min",
-                        },
-                    ]
-                )
-
-                # Create highlight layer with larger circles
-                # Use the same color encoding as the main chart to maintain consistency
-                highlights = (
-                    alt.Chart(self.prepare_data_for_altair(highlight_data))
-                    .mark_circle(
-                        size=150,  # Larger than the line points
-                        stroke="white",  # White border for visibility
-                        strokeWidth=3,
-                        opacity=0.8,
-                    )
-                    .encode(
-                        x=f"{mapping.x}:T",  # Multi-line usually uses temporal x-axis
-                        y=f"{mapping.y}:Q",
-                        color=alt.Color(
-                            f"{mapping.color}:N",
-                            # Don't set scale here - let theme handle the color scheme
-                            title=f"{mapping.color}, Highlighted Points",
-                        ),
-                    )
-                )
-                return alt.layer(chart, highlights)
-
-        # Use base implementation for other elements
-        return super()._apply_single_auxiliary(chart, element, data, mapping, element_config)

@@ -106,19 +106,13 @@ class TestMultiLineTemplate:
         assert isinstance(chart_with_aux, alt.LayerChart)
 
     def test_allowed_auxiliary_elements(self, template: MultiLineTemplate) -> None:
-        """Test that multi-line chart allows appropriate auxiliary elements."""
+        """Test that multi-line chart allows only target line auxiliary element."""
         spec = template.spec
         allowed = spec.allowed_auxiliary
 
-        # Multi-line charts should only allow target line and highlight
+        # Multi-line charts should only allow target line
         assert AuxiliaryElement.TARGET_LINE in allowed
-        assert AuxiliaryElement.HIGHLIGHT in allowed
-        # These should NOT be allowed anymore
-        assert AuxiliaryElement.MEAN_LINE not in allowed
-        assert AuxiliaryElement.MEDIAN_LINE not in allowed
-        assert AuxiliaryElement.MOVING_AVG not in allowed
-        assert AuxiliaryElement.THRESHOLD not in allowed
-        assert AuxiliaryElement.ANNOTATION not in allowed
+        assert len(allowed) == 1  # Only one auxiliary element allowed
 
     def test_mapping_validation(self, template: MultiLineTemplate) -> None:
         """Test mapping validation for required encodings."""
