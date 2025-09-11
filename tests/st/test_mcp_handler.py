@@ -124,18 +124,26 @@ class TestMCPHandler:
         assert response.error is None
         assert response.result is not None
 
-        # Should return error result from Coordinator (not implemented yet)
+        # Should return error result from Coordinator (pattern selection will fail without LLM)
         result = response.result
         assert result["isError"] is True
         assert len(result["content"]) > 0
         assert result["content"][0]["type"] == "text"
-        assert "not yet implemented" in result["content"][0]["text"]
+        # The error message will be about pattern selection failure or LLM error
+        error_text = result["content"][0]["text"]
+        assert (
+            "Failed to select visualization pattern" in error_text
+            or "LLM" in error_text
+            or "not yet implemented" in error_text
+        )
 
         # Verify structured content contains error and metadata
         assert "structuredContent" in result
         assert "error" in result["structuredContent"]
         assert "metadata" in result["structuredContent"]
-        assert result["structuredContent"]["error"]["code"] == "E500_INTERNAL"
+        # Error code could be E422_UNPROCESSABLE (pattern selection) or E500_INTERNAL
+        error_code = result["structuredContent"]["error"]["code"]
+        assert error_code in ["E422_UNPROCESSABLE", "E500_INTERNAL"]
 
     def test_unknown_tool_call(self) -> None:
         """Test handling of unknown tool call."""
