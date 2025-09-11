@@ -159,6 +159,26 @@ class PatternSelectionError(BusinessError):
         )
 
 
+class ProcessingError(BusinessError):
+    """Raised when data processing fails."""
+
+    def __init__(
+        self,
+        message: str,
+        operation: str | None = None,
+        hint: str | None = None,
+    ):
+        """Initialize processing error."""
+        if not hint and operation:
+            hint = f"Operation '{operation}' failed. Check if the data is compatible with this operation."
+
+        super().__init__(
+            message=message,
+            hint=hint,
+            phase=PipelinePhase.DATA_PROCESSING,
+        )
+
+
 class MappingError(BusinessError):
     """Raised when data mapping fails."""
 
