@@ -52,7 +52,7 @@ class LLMSettings(BaseSettings):
     )
 
     api_key: str | None = Field(None, description="API key for LLM service")
-    model: str = Field("gpt-3.5-turbo", description="Default model to use")
+    model: str = Field("gpt-5-mini", description="Default model to use")
     timeout: int = Field(10, description="Request timeout in seconds")
     max_retries: int = Field(3, description="Maximum number of retries")
     retry_delay: float = Field(1.0, description="Initial retry delay in seconds")

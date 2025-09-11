@@ -65,7 +65,7 @@ class TestLLMSettings:
     def test_default_settings(self):
         """Test default settings values."""
         settings = LLMSettings()
-        assert settings.model == "gpt-3.5-turbo"
+        assert settings.model == "gpt-5-mini"
         assert settings.timeout == 10
         assert settings.max_retries == 3
         assert settings.retry_delay == 1.0
@@ -213,7 +213,7 @@ class TestLiteLLMClient:
             # Verify litellm was called correctly
             mock_litellm.completion.assert_called_once()
             call_kwargs = mock_litellm.completion.call_args[1]
-            assert call_kwargs["model"] == "gpt-3.5-turbo"
+            assert call_kwargs["model"] == "gpt-5-mini"  # Using new default model
             assert len(call_kwargs["messages"]) == 1
             assert call_kwargs["messages"][0]["role"] == "user"
             assert call_kwargs["messages"][0]["content"] == "Hello"

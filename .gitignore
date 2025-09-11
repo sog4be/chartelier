@@ -176,3 +176,5 @@ Desktop.ini
 test_outputs/
 tests/local/visual_output/charts/
 tests/local/visual_output/auxiliary_matrix/
+test_e2e.py
+test_output.svg
