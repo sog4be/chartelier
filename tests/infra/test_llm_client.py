@@ -64,7 +64,8 @@ class TestLLMSettings:
 
     def test_default_settings(self):
         """Test default settings values."""
-        settings = LLMSettings()
+        # Create settings without loading from .env file
+        settings = LLMSettings(_env_file=None)
         assert settings.model == "gpt-5-mini"
         assert settings.timeout == 10
         assert settings.max_retries == 3
@@ -214,6 +215,7 @@ class TestLiteLLMClient:
             mock_litellm.completion.assert_called_once()
             call_kwargs = mock_litellm.completion.call_args[1]
             assert call_kwargs["model"] == "gpt-5-mini"  # Using new default model
+            assert call_kwargs["temperature"] == 1.0  # GPT-5 only supports temperature=1.0
             assert len(call_kwargs["messages"]) == 1
             assert call_kwargs["messages"][0]["role"] == "user"
             assert call_kwargs["messages"][0]["content"] == "Hello"

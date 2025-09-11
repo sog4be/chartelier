@@ -124,26 +124,34 @@ class TestMCPHandler:
         assert response.error is None
         assert response.result is not None
 
-        # Should return error result from Coordinator (pattern selection will fail without LLM)
+        # Check if API key is configured (test should work in both cases)
         result = response.result
-        assert result["isError"] is True
         assert len(result["content"]) > 0
-        assert result["content"][0]["type"] == "text"
-        # The error message will be about pattern selection failure or LLM error
-        error_text = result["content"][0]["text"]
-        assert (
-            "Failed to select visualization pattern" in error_text
-            or "LLM" in error_text
-            or "not yet implemented" in error_text
-        )
 
-        # Verify structured content contains error and metadata
-        assert "structuredContent" in result
-        assert "error" in result["structuredContent"]
-        assert "metadata" in result["structuredContent"]
-        # Error code could be E422_UNPROCESSABLE (pattern selection) or E500_INTERNAL
-        error_code = result["structuredContent"]["error"]["code"]
-        assert error_code in ["E422_UNPROCESSABLE", "E500_INTERNAL"]
+        if result["isError"]:
+            # LLM not configured case - should get error
+            assert result["content"][0]["type"] == "text"
+            error_text = result["content"][0]["text"]
+            assert (
+                "Failed to select visualization pattern" in error_text
+                or "LLM" in error_text
+                or "not yet implemented" in error_text
+            )
+
+            # Verify structured content contains error and metadata
+            assert "structuredContent" in result
+            assert "error" in result["structuredContent"]
+            assert "metadata" in result["structuredContent"]
+            error_code = result["structuredContent"]["error"]["code"]
+            assert error_code in ["E422_UNPROCESSABLE", "E500_INTERNAL"]
+        else:
+            # LLM configured case - should get successful visualization
+            assert result["content"][0]["type"] == "image"
+            assert "structuredContent" in result
+            assert "metadata" in result["structuredContent"]
+            metadata = result["structuredContent"]["metadata"]
+            assert "pattern_id" in metadata
+            assert "template_id" in metadata
 
     def test_unknown_tool_call(self) -> None:
         """Test handling of unknown tool call."""

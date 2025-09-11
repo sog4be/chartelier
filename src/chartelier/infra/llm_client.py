@@ -212,6 +212,8 @@ class LiteLLMClient(BaseLLMClient):
             import litellm  # noqa: PLC0415 — Lazy import for optional dependency
 
             self._litellm = litellm
+            # Enable dropping unsupported params for better compatibility
+            litellm.drop_params = True
         except ImportError as e:
             msg = "litellm is not installed. Install with: pip install chartelier[litellm]"
             raise ImportError(msg) from e
@@ -237,10 +239,15 @@ class LiteLLMClient(BaseLLMClient):
         message_dicts = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         # Prepare kwargs
+        model = kwargs.get("model", self.settings.model)
+
+        # GPT-5 models only support temperature=1.0
+        temperature = 1.0 if "gpt-5" in model.lower() else kwargs.get("temperature", self.settings.temperature)
+
         request_kwargs = {
-            "model": kwargs.get("model", self.settings.model),
+            "model": model,
             "messages": message_dicts,
-            "temperature": kwargs.get("temperature", self.settings.temperature),
+            "temperature": temperature,
             "timeout": self.settings.timeout,
         }
 
