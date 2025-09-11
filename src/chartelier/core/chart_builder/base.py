@@ -333,14 +333,21 @@ class BaseTemplate(ABC):
                         ]
                     )
 
-                    # Determine proper x-axis encoding based on data type
+                    # Determine proper x-axis encoding based on data type and column name
                     x_col_data = data[mapping.x]
+                    x_name_lower = mapping.x.lower()
                     x_encoding = f"{mapping.x}:N"  # Default to nominal for categorical data
 
                     # Check if x column contains dates or numeric values
                     if hasattr(x_col_data, "dtype"):
                         dtype_str = str(x_col_data.dtype).lower()
-                        if "date" in dtype_str or "time" in dtype_str:
+                        # Check both dtype and column name for temporal detection
+                        if (
+                            "date" in dtype_str
+                            or "time" in dtype_str
+                            or "date" in x_name_lower
+                            or "time" in x_name_lower
+                        ):
                             x_encoding = f"{mapping.x}:T"
                         elif hasattr(x_col_data.dtype, "is_numeric") and x_col_data.dtype.is_numeric():
                             x_encoding = f"{mapping.x}:Q"
@@ -429,14 +436,21 @@ class BaseTemplate(ABC):
                         ]
                     )
 
-                    # Determine proper x-axis encoding based on data type
+                    # Determine proper x-axis encoding based on data type and column name
                     x_col_data = data[mapping.x]
+                    x_name_lower = mapping.x.lower()
                     x_encoding = f"{mapping.x}:N"  # Default to nominal
 
                     # Check if x column contains dates or numeric values
                     if hasattr(x_col_data, "dtype"):
                         dtype_str = str(x_col_data.dtype).lower()
-                        if "date" in dtype_str or "time" in dtype_str:
+                        # Check both dtype and column name for temporal detection
+                        if (
+                            "date" in dtype_str
+                            or "time" in dtype_str
+                            or "date" in x_name_lower
+                            or "time" in x_name_lower
+                        ):
                             x_encoding = f"{mapping.x}:T"
                         elif hasattr(x_col_data.dtype, "is_numeric") and x_col_data.dtype.is_numeric():
                             x_encoding = f"{mapping.x}:Q"
